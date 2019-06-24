@@ -1,0 +1,12 @@
+{
+    "name": "Potrace",
+    "id": 20000,
+    "commands": [
+        {
+            "theme": "Potrace",
+            "syntax": "Potrace(&O;&J):J",
+            "threadSafe": true
+        }
+    ]
+}
+

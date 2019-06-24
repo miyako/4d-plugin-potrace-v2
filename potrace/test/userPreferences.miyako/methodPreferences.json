@@ -1,0 +1,47 @@
+﻿{
+	"Sources/Methods/Method1.4dm": {
+		"startSelection": 8,
+		"endSelection": 8,
+		"firstSelectedLine": 9,
+		"lastSelectedLine": 9,
+		"folding": [],
+		"bookmarks": [],
+		"stamp": "2019-06-23T23:44:32.847Z"
+	},
+	"Sources/Methods/Method2.4dm": {
+		"startSelection": 34,
+		"endSelection": 34,
+		"firstSelectedLine": 62,
+		"lastSelectedLine": 62,
+		"folding": [],
+		"bookmarks": [],
+		"stamp": "2019-06-24T02:19:29.267Z"
+	},
+	"Sources/Methods/Method3.4dm": {
+		"startSelection": 57,
+		"endSelection": 57,
+		"firstSelectedLine": 17,
+		"lastSelectedLine": 17,
+		"folding": [],
+		"bookmarks": [],
+		"stamp": "2019-06-24T02:37:49.186Z"
+	},
+	"Sources/Methods/Method4.4dm": {
+		"startSelection": 53,
+		"endSelection": 31,
+		"firstSelectedLine": 28,
+		"lastSelectedLine": 28,
+		"folding": [],
+		"bookmarks": [],
+		"stamp": "2019-06-24T07:13:55.848Z"
+	},
+	"Sources/Methods/test.4dm": {
+		"startSelection": 0,
+		"endSelection": 0,
+		"firstSelectedLine": 1,
+		"lastSelectedLine": 1,
+		"folding": [],
+		"bookmarks": [],
+		"stamp": "2019-06-24T06:52:12.154Z"
+	}
+}

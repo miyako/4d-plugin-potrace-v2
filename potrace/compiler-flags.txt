@@ -1,0 +1,15 @@
+export CCFLAGS="-arch i386"
+export CXXFLAGS="-arch i386"
+export CFLAGS="-arch i386 -isysroot /SDKs/MacOSX10.11.sdk -mmacosx-version-min=10.11"
+export LDFLAGS="-arch i386 -isysroot /SDKs/MacOSX10.11.sdk -mmacosx-version-min=10.11"
+export CPPFLAGS="-arch i386 -isysroot /SDKs/MacOSX10.11.sdk -mmacosx-version-min=10.11"
+./configure --without-x --prefix=/Users/miyako/Desktop/i386 --with-libpotrace --enable-local-getopt --enable-dumb-tty --enable-a4 --enable-metric
+
+export CCFLAGS="-arch x86_64"
+export CXXFLAGS="-arch x86_64"
+export CFLAGS="-arch x86_64 -isysroot /SDKs/MacOSX10.13.sdk -mmacosx-version-min=10.13"
+export LDFLAGS="-arch x86_64 -isysroot /SDKs/MacOSX10.13.sdk -mmacosx-version-min=10.13"
+export CPPFLAGS="-arch x86_64 -isysroot /SDKs/MacOSX10.13.sdk -mmacosx-version-min=10.13"
+./configure --prefix=/Users/miyako/Desktop/x86_64 --with-libpotrace --enable-local-getopt --enable-dumb-tty --enable-a4 --enable-metric
+
+$(ARCHS_STANDARD_32_64_BIT)
