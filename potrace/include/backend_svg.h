@@ -10,7 +10,7 @@
 
 #include "4DPlugin-Potrace.h"
 
-PA_Picture page_svg (potrace_path_t *plist, imginfo_t *imginfo);
-PA_Picture page_gimp(potrace_path_t *plist, imginfo_t *imginfo);
+PA_Picture page_svg (potrace_path_t *plist, imginfo_t *imginfo, info_t *info);
+PA_Picture page_gimp(potrace_path_t *plist, imginfo_t *imginfo, info_t *info);
 
 #endif /* BACKEND_SVG_H */

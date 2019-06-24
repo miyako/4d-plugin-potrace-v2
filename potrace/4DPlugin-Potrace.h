@@ -13,6 +13,10 @@
 
 #include "4DPluginAPI.h"
 
+#include <math.h>
+
+#include <CoreFoundation/CoreFoundation.h>
+
 #ifdef _WINDOWS
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
@@ -26,10 +30,13 @@
 #define UNDEF ((double)(1e30))   /* a value to represent "undefined" */
 #endif
 
+#pragma mark -
+
 // --- Potrace
 void Potrace(PA_PluginParameters params);
+void Mkbitmap(PA_PluginParameters params);
 
-#pragma mark main.h
+#pragma mark - main.h
 
 #include "potracelib.h"
 #include "progress_bar.h"
@@ -42,8 +49,6 @@ struct dim_s {
     double d; /* dimension (in pt), or 0 if not given */
 };
 typedef struct dim_s dim_t;
-
-struct backend_s;
 
 /* structure to hold command line options */
 struct info_s {
@@ -99,7 +104,14 @@ typedef struct imginfo_s imginfo_t;
 #define DIM_MM (72 / 25.4)
 #define DIM_PT (1)
 
-#pragma mark bitmap_io.h
+#define DEFAULT_DIM DIM_CM
+#define DEFAULT_DIM_NAME "centimeters"
+
+#define DEFAULT_PAPERWIDTH 595
+#define DEFAULT_PAPERHEIGHT 842
+#define DEFAULT_PAPERFORMAT "a4"
+
+#pragma mark - bitmap_io.h
 
 struct bmp_info_s {
 	unsigned int FileSize;
@@ -124,5 +136,75 @@ struct bmp_info_s {
 	int topdown;                 /* top-down mode? */
 };
 typedef struct bmp_info_s bmp_info_t;
+
+#include <vector>
+
+#define ycorr(y) (bmpinfo.topdown ? bmpinfo.h-1-y : y)
+#define TRY(x) if (x) goto try_error
+#define TRY_EOF(x) if (x) goto eof
+#define INTBITS (8*sizeof(int))
+#define COLTABLE(c) ((c) < bmpinfo.ncolors ? coltable[(c)] : 0)
+
+#include "auxiliary.h"
+#include "bitmap.h"
+#include "bitops.h"
+#include "lists.h"
+
+#define BITMAPCOREHEADER 12
+#define OS22XBITMAPHEADER 64
+#define BITMAPINFOHEADER 40
+#define BITMAPV2INFOHEADER 52
+#define BITMAPV3INFOHEADER 56
+#define BITMAPV4HEADER 108
+#define BITMAPV5HEADER 124
+
+void bmp_pad_reset(void);
+int bmp_forward(std::vector<unsigned char> buf, int *pos, int *count, int newPos);
+int bmp_pad(std::vector<unsigned char> &buf, int *pos, int *count);
+int bmp_readint(std::vector<unsigned char> &buf, int *pos, int *count, int len, unsigned int *p);
+int bm_readbody_bmp(std::vector<unsigned char> &buf, double threshold, potrace_bitmap_t **bmp);
+static void calc_dimensions(imginfo_t *imginfo, potrace_path_t *plist, info_s *info);
+
+/* backends and their characteristics */
+struct backend_s {
+    const char *name;       /* name of this backend */
+    const char *ext;        /* file extension */
+    int fixed;              /* fixed page size backend? */
+    int pixel;              /* pixel-based backend? */
+    int multi;              /* multi-page backend? */
+    int (*init_f)(std::vector<unsigned char> &fout, info_t *info);
+    /* initialization function */
+    PA_Picture (*page_f)(potrace_path_t *plist, imginfo_t *imginfo, info_t *info);
+    /* per-bitmap function */
+    int (*term_f)(std::vector<unsigned char> &fout, info_t *info);
+    /* finalization function */
+    int opticurve;    /* opticurve capable (true Bezier curves?) */
+};
+typedef struct backend_s backend_t;
+
+#pragma mark - trans.h
+
+void trans_scale_to_size(trans_t *r, double w, double h);
+void trans_tighten(trans_t *r, potrace_path_t *plist);
+void trans_scale_to_size(trans_t *r, double w, double h);
+void trans_rescale(trans_t *r, double sc);
+void trans_from_rect(trans_t *r, double w, double h);
+void trans_rotate(trans_t *r, double alpha);
+
+#pragma mark - bbox.h
+#include "bbox.h"
+
+static inline double double_of_dim(dim_t d, double def);
+static double iprod(dpoint_t a, dpoint_t b);
+static inline void singleton(interval_t *i, double x);
+static void interval(interval_t *i, double min, double max);
+static void curve_limits(potrace_curve_t *curve, dpoint_t dir, interval_t *i);
+static inline void segment_limits(int tag, dpoint_t a, dpoint_t c[3], dpoint_t dir, interval_t *i);
+namespace bbox {
+    static inline void extend(interval_t *i, double x);
+}
+static void bezier_limits(double x0, double x1, double x2, double x3, interval_t *i);
+static inline double bezier(double t, double x0, double x1, double x2, double x3);
+static inline int in_interval(interval_t *i, double x);
 
 #endif /* PLUGIN_POTRACE_H */

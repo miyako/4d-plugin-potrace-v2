@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <string.h>
+#include <string>
 #include <math.h>
 
 #include "potracelib.h"
@@ -25,12 +25,12 @@
 /* path-drawing auxiliary functions */
 
 /* coordinate quantization */
-static inline point_t unit(dpoint_t p) {
-  point_t q;
-
-  q.x = (long)(floor(p.x*info.unit+.5));
-  q.y = (long)(floor(p.y*info.unit+.5));
-  return q;
+static inline point_t unit(dpoint_t p, info_t *info) {
+    
+    point_t q;
+    q.x = (long)(floor(p.x*info->unit+.5));
+    q.y = (long)(floor(p.y*info->unit+.5));
+    return q;
 }
 
 static point_t cur;
@@ -40,7 +40,7 @@ static int newline = 1;
 
 static void shiptoken(std::string &fout, char *token) {
     
-    int c = strlen(token);
+    size_t c = strlen(token);
     if (!newline && column+c+1 > 75)
     {
         fout += "\n";
@@ -344,14 +344,14 @@ static void write_paths_transparent(std::string &fout, potrace_path_t *tree, inf
 /* Backend. */
 
 /* public interface for SVG */
-PA_Picture page_svg(potrace_path_t *plist, imginfo_t *imginfo) {
+PA_Picture page_svg(potrace_path_t *plist, imginfo_t *imginfo, info_t *info) {
 
-  double bboxx = imginfo->trans.bb[0]+imginfo->lmar+imginfo->rmar;
-  double bboxy = imginfo->trans.bb[1]+imginfo->tmar+imginfo->bmar;
-  double origx = imginfo->trans.orig[0] + imginfo->lmar;
-  double origy = bboxy - imginfo->trans.orig[1] - imginfo->bmar;
-  double scalex = imginfo->trans.scalex / info.unit;
-  double scaley = -imginfo->trans.scaley / info.unit;
+    double bboxx = imginfo->trans.bb[0]+imginfo->lmar+imginfo->rmar;
+    double bboxy = imginfo->trans.bb[1]+imginfo->tmar+imginfo->bmar;
+    double origx = imginfo->trans.orig[0] + imginfo->lmar;
+    double origy = bboxy - imginfo->trans.orig[1] - imginfo->bmar;
+    double scalex = imginfo->trans.scalex / info->unit;
+    double scaley = -imginfo->trans.scaley / info->unit;
     
     std::string fout;
     
@@ -423,7 +423,7 @@ PA_Picture page_svg(potrace_path_t *plist, imginfo_t *imginfo) {
     fout += "</g>\n";
     fout += "</svg>\n";
 
-    PA_Picture picture = PA_CreatePicture((void *)fout.c_str(), fout.size());
+    PA_Picture picture = PA_CreatePicture((void *)fout.c_str(), (PA_long32)fout.size());
     
     if(!picture) return 0;
     
@@ -432,9 +432,10 @@ PA_Picture page_svg(potrace_path_t *plist, imginfo_t *imginfo) {
 
 /* the Gimppath backend is identical, except that it disables
    --opaque, enables --flat, and the dimensions are pixel-based */
-PA_Picture page_gimp(potrace_path_t *plist, imginfo_t *imginfo) {
+PA_Picture page_gimp(potrace_path_t *plist, imginfo_t *imginfo, info_t *info) {
     
-  info.opaque = 0;
-  info.grouping = 0;
-  return page_svg(plist, imginfo);
+  info->opaque = 0;
+  info->grouping = 0;
+    
+  return page_svg(plist, imginfo, info);
 }

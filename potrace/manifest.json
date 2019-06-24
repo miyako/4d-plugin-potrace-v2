@@ -6,6 +6,11 @@
             "theme": "Potrace",
             "syntax": "Potrace(&O;&J):J",
             "threadSafe": true
+        },
+        {
+            "theme": "Mkbitmap",
+            "syntax": "Mkbitmap(&O;&J):J",
+            "threadSafe": true
         }
     ]
 }

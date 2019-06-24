@@ -81,7 +81,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			C5pWyb1b8clkXY0C8ccnQYkUh1I=
+			OedGQRcelnuNBej1eQMte3+qdL0=
 			</data>
 			<key>requirement</key>
 			<string>identifier manifest and anchor apple generic and certificate leaf[subject.CN] = "Mac Developer: keisuke miyako (4W9UT59D3B)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
