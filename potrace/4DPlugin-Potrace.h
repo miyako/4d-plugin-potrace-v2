@@ -14,8 +14,10 @@
 #include "4DPluginAPI.h"
 
 #include <math.h>
+#include <stdio.h>
+#include <stdarg.h>
 
-#include <CoreFoundation/CoreFoundation.h>
+#include <string>
 
 #ifdef _WINDOWS
 #define snprintf _snprintf
@@ -42,6 +44,11 @@ void Mkbitmap(PA_PluginParameters params);
 #include "progress_bar.h"
 #include "auxiliary.h"
 #include "trans.h"
+#include "curve.h"
+#include "lists.h"
+
+#include "4DPlugin-bmp.h"
+#include "4DPlugin-trans.h"
 
 /* structure to hold a dimensioned value */
 struct dim_s {
@@ -163,7 +170,8 @@ int bmp_forward(std::vector<unsigned char> buf, int *pos, int *count, int newPos
 int bmp_pad(std::vector<unsigned char> &buf, int *pos, int *count);
 int bmp_readint(std::vector<unsigned char> &buf, int *pos, int *count, int len, unsigned int *p);
 int bm_readbody_bmp(std::vector<unsigned char> &buf, double threshold, potrace_bitmap_t **bmp);
-static void calc_dimensions(imginfo_t *imginfo, potrace_path_t *plist, info_s *info);
+
+#pragma mark - main.h
 
 /* backends and their characteristics */
 struct backend_s {
@@ -173,38 +181,19 @@ struct backend_s {
     int pixel;              /* pixel-based backend? */
     int multi;              /* multi-page backend? */
     int (*init_f)(std::vector<unsigned char> &fout, info_t *info);
-    /* initialization function */
+                            /* initialization function */
     PA_Picture (*page_f)(potrace_path_t *plist, imginfo_t *imginfo, info_t *info);
-    /* per-bitmap function */
+                            /* per-bitmap function */
     int (*term_f)(std::vector<unsigned char> &fout, info_t *info);
-    /* finalization function */
-    int opticurve;    /* opticurve capable (true Bezier curves?) */
+                            /* finalization function */
+    int opticurve;          /* opticurve capable (true Bezier curves?) */
 };
 typedef struct backend_s backend_t;
 
-#pragma mark - trans.h
+#include "4DPlugin-bbox.h"
 
-void trans_scale_to_size(trans_t *r, double w, double h);
-void trans_tighten(trans_t *r, potrace_path_t *plist);
-void trans_scale_to_size(trans_t *r, double w, double h);
-void trans_rescale(trans_t *r, double sc);
-void trans_from_rect(trans_t *r, double w, double h);
-void trans_rotate(trans_t *r, double alpha);
+#include "backend_svg.h"
 
-#pragma mark - bbox.h
-#include "bbox.h"
-
-static inline double double_of_dim(dim_t d, double def);
-static double iprod(dpoint_t a, dpoint_t b);
-static inline void singleton(interval_t *i, double x);
-static void interval(interval_t *i, double min, double max);
-static void curve_limits(potrace_curve_t *curve, dpoint_t dir, interval_t *i);
-static inline void segment_limits(int tag, dpoint_t a, dpoint_t c[3], dpoint_t dir, interval_t *i);
-namespace bbox {
-    static inline void extend(interval_t *i, double x);
-}
-static void bezier_limits(double x0, double x1, double x2, double x3, interval_t *i);
-static inline double bezier(double t, double x0, double x1, double x2, double x3);
-static inline int in_interval(interval_t *i, double x);
+#include "4DPlugin-JSON.h"
 
 #endif /* PLUGIN_POTRACE_H */

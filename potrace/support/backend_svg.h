@@ -6,8 +6,6 @@
 #ifndef BACKEND_SVG_H
 #define BACKEND_SVG_H
 
-#include "potracelib.h"
-
 #include "4DPlugin-Potrace.h"
 
 PA_Picture page_svg (potrace_path_t *plist, imginfo_t *imginfo, info_t *info);

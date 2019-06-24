@@ -5,21 +5,7 @@
 
 /* The SVG backend of Potrace. */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <string>
-#include <math.h>
-
-#include "potracelib.h"
-#include "curve.h"
-#include "4DPlugin-Potrace.h"
 #include "backend_svg.h"
-#include "lists.h"
-#include "auxiliary.h"
 
 /* ---------------------------------------------------------------------- */
 /* path-drawing auxiliary functions */
@@ -33,30 +19,25 @@ static inline point_t unit(dpoint_t p, info_t *info) {
     return q;
 }
 
-static point_t cur;
-static char lastop = 0;
-static int column = 0;
-static int newline = 1;
-
-static void shiptoken(std::string &fout, char *token) {
+static void shiptoken(std::string &fout, char *token, int *newline, int *column) {
     
     size_t c = strlen(token);
-    if (!newline && column+c+1 > 75)
+    if (!(*newline) && (*column)+c+1 > 75)
     {
         fout += "\n";
-        column = 0;
-        newline = 1;
-    } else if (!newline)
+        *column = 0;
+        *newline = 1;
+    } else if (!(*newline))
     {
         fout += " ";
-        column++;
+        *column += 1;
     }
     fout += token;
-    column += c;
-    newline = 0;
+    *column += c;
+    *newline = 0;
 }
 
-static void ship(std::string &fout, char *fmt, ...) {
+static void ship(std::string &fout, int *newline, int *column, char *fmt, ...) {
     
     va_list args;
     static char buf[4096]; /* static string limit is okay here because
@@ -74,48 +55,47 @@ static void ship(std::string &fout, char *fmt, ...) {
     while ((q = strchr(p, ' ')) != NULL)
     {
         *q = 0;
-        shiptoken(fout, p);
+        shiptoken(fout, p, newline, column);
         p = q+1;
-        PA_YieldAbsolute();
     }
-    shiptoken(fout, p);
+    shiptoken(fout, p, newline, column);
 }
 
-static void svg_moveto(std::string &fout, dpoint_t p, info_t *info) {
+static void svg_moveto(std::string &fout, dpoint_t p, info_t *info, int *newline, int *column, char *lastop, point_t *cur) {
     
-    cur = unit(p, info);
+    *cur = unit(p, info);
     
-    ship(fout, (char *)"M%ld %ld", cur.x, cur.y);
-    lastop = 'M';
+    ship(fout, newline, column, (char *)"M%ld %ld", cur->x, cur->y);
+    *lastop = 'M';
 }
 
-static void svg_rmoveto(std::string &fout, dpoint_t p, info_t *info) {
+static void svg_rmoveto(std::string &fout, dpoint_t p, info_t *info, int *newline, int *column, char *lastop, point_t *cur) {
     
     point_t q;
     
     q = unit(p, info);
-    ship(fout, (char *)"m%ld %ld", q.x-cur.x, q.y-cur.y);
-    cur = q;
-    lastop = 'm';
+    ship(fout, newline, column, (char *)"m%ld %ld", q.x-cur->x, q.y-cur->y);
+    *cur = q;
+    *lastop = 'm';
 }
 
-static void svg_lineto(std::string &fout, dpoint_t p, info_t *info) {
+static void svg_lineto(std::string &fout, dpoint_t p, info_t *info, int *newline, int *column, char *lastop, point_t *cur) {
     
     point_t q;
     
     q = unit(p, info);
     
-    if (lastop != 'l')
+    if ((*lastop) != 'l')
     {
-        ship(fout, (char *)"l%ld %ld", q.x-cur.x, q.y-cur.y);
+        ship(fout, newline, column, (char *)"l%ld %ld", q.x-cur->x, q.y-cur->y);
     } else {
-        ship(fout, (char *)"%ld %ld", q.x-cur.x, q.y-cur.y);
+        ship(fout, newline, column, (char *)"%ld %ld", q.x-cur->x, q.y-cur->y);
     }
-    cur = q;
-    lastop = 'l';
+    *cur = q;
+    *lastop = 'l';
 }
 
-static void svg_curveto(std::string &fout, dpoint_t p1, dpoint_t p2, dpoint_t p3, info_t *info) {
+static void svg_curveto(std::string &fout, dpoint_t p1, dpoint_t p2, dpoint_t p3, info_t *info, int *newline, int *column, char *lastop, point_t *cur) {
     
     point_t q1, q2, q3;
     
@@ -123,14 +103,14 @@ static void svg_curveto(std::string &fout, dpoint_t p1, dpoint_t p2, dpoint_t p3
     q2 = unit(p2, info);
     q3 = unit(p3, info);
     
-    if (lastop != 'c')
+    if ((*lastop) != 'c')
     {
-        ship(fout, (char *)"c%ld %ld %ld %ld %ld %ld", q1.x-cur.x, q1.y-cur.y, q2.x-cur.x, q2.y-cur.y, q3.x-cur.x, q3.y-cur.y);
+        ship(fout, newline, column, (char *)"c%ld %ld %ld %ld %ld %ld", q1.x-cur->x, q1.y-cur->y, q2.x-cur->x, q2.y-cur->y, q3.x-cur->x, q3.y-cur->y);
     } else {
-        ship(fout, (char *)"%ld %ld %ld %ld %ld %ld", q1.x-cur.x, q1.y-cur.y, q2.x-cur.x, q2.y-cur.y, q3.x-cur.x, q3.y-cur.y);
+        ship(fout, newline, column, (char *)"%ld %ld %ld %ld %ld %ld", q1.x-cur->x, q1.y-cur->y, q2.x-cur->x, q2.y-cur->y, q3.x-cur->x, q3.y-cur->y);
     }
-    cur = q3;
-    lastop = 'c';
+    *cur = q3;
+    *lastop = 'c';
 }
 
 /* ---------------------------------------------------------------------- */
@@ -138,7 +118,7 @@ static void svg_curveto(std::string &fout, dpoint_t p1, dpoint_t p2, dpoint_t p3
 
 /* Explicit encoding. If abs is set, move to first coordinate
    absolutely. */
-static int svg_path(std::string &fout, potrace_curve_t *curve, int abs, info_t *info) {
+static int svg_path(std::string &fout, potrace_curve_t *curve, int abs, info_t *info, int *newline, int *column, char *lastop, point_t *cur) {
     
     int i;
     dpoint_t *c;
@@ -147,9 +127,9 @@ static int svg_path(std::string &fout, potrace_curve_t *curve, int abs, info_t *
     c = curve->c[m-1];
     if (abs)
     {
-        svg_moveto(fout, c[2], info);
+        svg_moveto(fout, c[2], info, newline, column, lastop, cur);
     } else {
-        svg_rmoveto(fout, c[2], info);
+        svg_rmoveto(fout, c[2], info, newline, column, lastop, cur);
     }
     
     for (i=0; i<m; i++)
@@ -158,62 +138,62 @@ static int svg_path(std::string &fout, potrace_curve_t *curve, int abs, info_t *
         switch (curve->tag[i])
         {
             case POTRACE_CORNER:
-            svg_lineto(fout, c[1], info);
-            svg_lineto(fout, c[2], info);
+            svg_lineto(fout, c[1], info, newline, column, lastop, cur);
+            svg_lineto(fout, c[2], info, newline, column, lastop, cur);
             break;
             case POTRACE_CURVETO:
-            svg_curveto(fout, c[0], c[1], c[2], info);
+            svg_curveto(fout, c[0], c[1], c[2], info, newline, column, lastop, cur);
             break;
         }
     }
-    newline = 1;
-    shiptoken(fout, (char *)"z");
+    *newline = 1;
+    shiptoken(fout, (char *)"z", newline, column);
     return 0;
 }
 
 /* produce a jaggy path - for debugging. If abs is set, move to first
    coordinate absolutely. If abs is not set, move to first coordinate
    relatively, and traverse path in the opposite direction. */
-static int svg_jaggy_path(std::string &fout, point_t *pt, int n, int abs, info_t *info) {
+static int svg_jaggy_path(std::string &fout, point_t *pt, int n, int abs, info_t *info, int *newline, int *column, char *lastop, point_t *cur) {
     
     int i;
-    point_t cur, prev;
+    point_t prev;
     
     if (abs)
     {
-        cur = prev = pt[n-1];
-        svg_moveto(fout, dpoint(cur), info);
+        *cur = prev = pt[n-1];
+        svg_moveto(fout, dpoint(*cur), info, newline, column, lastop, cur);
         for (i=0; i<n; i++)
         {
-            if (pt[i].x != cur.x && pt[i].y != cur.y)
+            if (pt[i].x != cur->x && pt[i].y != cur->y)
             {
-                cur = prev;
-                svg_lineto(fout, dpoint(cur), info);
+                *cur = prev;
+                svg_lineto(fout, dpoint(*cur), info, newline, column, lastop, cur);
             }
             prev = pt[i];
         }
-        svg_lineto(fout, dpoint(pt[n-1]), info);
+        svg_lineto(fout, dpoint(pt[n-1]), info, newline, column, lastop, cur);
     } else
     {
-        cur = prev = pt[0];
-        svg_rmoveto(fout, dpoint(cur), info);
+        *cur = prev = pt[0];
+        svg_rmoveto(fout, dpoint(*cur), info, newline, column, lastop, cur);
         for (i=n-1; i>=0; i--)
         {
-            if (pt[i].x != cur.x && pt[i].y != cur.y)
+            if (pt[i].x != cur->x && pt[i].y != cur->y)
             {
-                cur = prev;
-                svg_lineto(fout, dpoint(cur), info);
+                *cur = prev;
+                svg_lineto(fout, dpoint(*cur), info, newline, column, lastop, cur);
             }
             prev = pt[i];
         }
-        svg_lineto(fout, dpoint(pt[0]), info);
+        svg_lineto(fout, dpoint(pt[0]), info, newline, column, lastop, cur);
     }
-    newline = 1;
-    shiptoken(fout, (char *)"z");
+    *newline = 1;
+    shiptoken(fout, (char *)"z", newline, column);
     return 0;
 }
 
-static void write_paths_opaque(std::string &fout, potrace_path_t *tree, info_t *info) {
+static void write_paths_opaque(std::string &fout, potrace_path_t *tree, info_t *info, int *newline, int *column, char *lastop, point_t *cur) {
     
     potrace_path_t *p, *q;
     
@@ -231,14 +211,14 @@ static void write_paths_opaque(std::string &fout, potrace_path_t *tree, info_t *
         fout += _color;
         fout += "\" stroke=\"none\" d=\"";
         
-        column = strlen("<path fill=\"#______\" stroke=\"none\" d=\"");
-        newline = 1;
-        lastop = 0;
+        *column = strlen("<path fill=\"#______\" stroke=\"none\" d=\"");
+        *newline = 1;
+        *lastop = 0;
         if (info->debug == 1)
         {
-            svg_jaggy_path(fout, p->priv->pt, p->priv->len, 1, info);
+            svg_jaggy_path(fout, p->priv->pt, p->priv->len, 1, info, newline, column, lastop, cur);
         } else {
-            svg_path(fout, &p->curve, 1, info);
+            svg_path(fout, &p->curve, 1, info, newline, column, lastop, cur);
         }
         fout += "\"/>\n";
         for (q=p->childlist; q; q=q->sibling)
@@ -248,15 +228,15 @@ static void write_paths_opaque(std::string &fout, potrace_path_t *tree, info_t *
             fout += "<path fill=\"#";
             fout += _fillcolor;
             fout += "\" stroke=\"none\" d=\"";
-            column = strlen("<path fill=\"#______\" stroke=\"none\" d=\"");
-            newline = 1;
+            *column = strlen("<path fill=\"#______\" stroke=\"none\" d=\"");
+            *newline = 1;
             lastop = 0;
             if (info->debug == 1)
             {
-                svg_jaggy_path(fout, q->priv->pt, q->priv->len, 1, info);
+                svg_jaggy_path(fout, q->priv->pt, q->priv->len, 1, info, newline, column, lastop, cur);
             } else
             {
-                svg_path(fout, &q->curve, 1, info);
+                svg_path(fout, &q->curve, 1, info, newline, column, lastop, cur);
             }
             fout += "\"/>\n";
         }
@@ -266,7 +246,7 @@ static void write_paths_opaque(std::string &fout, potrace_path_t *tree, info_t *
         }
         for (q=p->childlist; q; q=q->sibling)
         {
-            write_paths_opaque(fout, q->childlist, info);
+            write_paths_opaque(fout, q->childlist, info, newline, column, lastop, cur);
         }
         if (info->grouping == 2)
         {
@@ -275,7 +255,7 @@ static void write_paths_opaque(std::string &fout, potrace_path_t *tree, info_t *
     }
 }
 
-static void write_paths_transparent_rec(std::string &fout, potrace_path_t *tree, info_t *info) {
+static void write_paths_transparent_rec(std::string &fout, potrace_path_t *tree, info_t *info, int *newline, int *column, char *lastop, point_t *cur) {
     
     potrace_path_t *p, *q;
     
@@ -288,25 +268,25 @@ static void write_paths_transparent_rec(std::string &fout, potrace_path_t *tree,
         if (info->grouping != 0)
         {
             fout += "<path d=\"";
-            column = strlen("<path d=\"");
-            newline = 1;
-            lastop = 0;
+            *column = strlen("<path d=\"");
+            *newline = 1;
+            *lastop = 0;
         }
         if (info->debug == 1)
         {
-            svg_jaggy_path(fout, p->priv->pt, p->priv->len, 1, info);
+            svg_jaggy_path(fout, p->priv->pt, p->priv->len, 1, info, newline, column, lastop, cur);
         } else
         {
-            svg_path(fout, &p->curve, 1, info);
+            svg_path(fout, &p->curve, 1, info, newline, column, lastop, cur);
         }
         for (q=p->childlist; q; q=q->sibling)
         {
             if (info->debug == 1)
             {
-                svg_jaggy_path(fout, q->priv->pt, q->priv->len, 0, info);
+                svg_jaggy_path(fout, q->priv->pt, q->priv->len, 0, info, newline, column, lastop, cur);
             } else
             {
-                svg_path(fout, &q->curve, 0, info);
+                svg_path(fout, &q->curve, 0, info, newline, column, lastop, cur);
             }
         }
         if (info->grouping != 0)
@@ -315,7 +295,7 @@ static void write_paths_transparent_rec(std::string &fout, potrace_path_t *tree,
         }
         for (q=p->childlist; q; q=q->sibling)
         {
-            write_paths_transparent_rec(fout, q->childlist, info);
+            write_paths_transparent_rec(fout, q->childlist, info, newline, column, lastop, cur);
         }
         if (info->grouping == 2)
         {
@@ -324,24 +304,23 @@ static void write_paths_transparent_rec(std::string &fout, potrace_path_t *tree,
     }
 }
 
-static void write_paths_transparent(std::string &fout, potrace_path_t *tree, info_t *info) {
+static void write_paths_transparent(std::string &fout, potrace_path_t *tree, info_t *info, int *newline, int *column, char *lastop, point_t *cur) {
     
     if (info->grouping == 0)
     {
         fout += "<path d=\"";
-        column = strlen("<path d=\"");
-        newline = 1;
-        lastop = 0;
+        *column = strlen("<path d=\"");
+        *newline = 1;
+        *lastop = 0;
     }
-    write_paths_transparent_rec(fout, tree, info);
+    write_paths_transparent_rec(fout, tree, info, newline, column, lastop, cur);
     if (info->grouping == 0)
     {
         fout += "\"/>\n";
     }
 }
 
-/* ---------------------------------------------------------------------- */
-/* Backend. */
+#pragma mark Backend
 
 /* public interface for SVG */
 PA_Picture page_svg(potrace_path_t *plist, imginfo_t *imginfo, info_t *info) {
@@ -352,6 +331,11 @@ PA_Picture page_svg(potrace_path_t *plist, imginfo_t *imginfo, info_t *info) {
     double origy = bboxy - imginfo->trans.orig[1] - imginfo->bmar;
     double scalex = imginfo->trans.scalex / info->unit;
     double scaley = -imginfo->trans.scaley / info->unit;
+    
+    int newline = 1;
+    int column = 0;
+    char lastop = 0;
+    point_t cur;
     
     std::string fout;
     
@@ -414,9 +398,9 @@ PA_Picture page_svg(potrace_path_t *plist, imginfo_t *imginfo, info_t *info) {
     
     if (info->opaque)
     {
-        write_paths_opaque(fout, plist, info);
+        write_paths_opaque(fout, plist, info, &newline, &column, &lastop, &cur);
     } else {
-        write_paths_transparent(fout, plist, info);
+        write_paths_transparent(fout, plist, info, &newline, &column, &lastop, &cur);
     }
     
     /* write footer */
