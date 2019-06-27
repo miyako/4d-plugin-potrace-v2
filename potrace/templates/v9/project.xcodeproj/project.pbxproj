@@ -16,7 +16,7 @@
 		8D01CCCA0486CAD60068D4B7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
 		D120937F13534DCC00A72CAA /* 4DPlugin-$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-")).h in Headers */ = {isa = PBXBuildFile; fileRef = D120937E13534DCC00A72CAA /* 4DPlugin-$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-")).h */; };
 		D130064F12F02D9700702C0E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D130064E12F02D9700702C0E /* Cocoa.framework */; };
-		D13116A91A03ACB700DE1322 /* 4DPluginAPI.c in Sources */ = {isa = PBXBuildFile; fileRef = D13116A81A03ACB700DE1322 /* 4DPluginAPI.c */; };
+D13116A91A03ACB700DE1322 /* 4DPluginAPI.c in Sources */ = {isa = PBXBuildFile; fileRef = D13116A81A03ACB700DE1322 /* 4DPluginAPI.c */; settings = {COMPILER_FLAGS = "-Wno-multichar"; }; };
 		D134D4AC1A030BA0008D14EF /* manifest.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = D134D4A91A030B06008D14EF /* manifest.json */; };
 /* End PBXBuildFile section */
 
@@ -35,15 +35,15 @@
 
 /* Begin PBXFileReference section */
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		189286350695AD8900B05D6E /* $4DEVAL($1.PRODUCT_NAME).bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = $4DEVAL($1.PRODUCT_NAME).bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+189286350695AD8900B05D6E /* $4DEVAL($1.PRODUCT_NAME).bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "$4DEVAL($1.PRODUCT_NAME).bundle"; sourceTree = BUILT_PRODUCTS_DIR; };
 		18B684F006944F2000CC6A1E /* 4DPluginAPI.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = 4DPluginAPI.h; sourceTree = "<group>"; };
 		18B684F106944F2000CC6A1E /* EntryPoints.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = EntryPoints.h; sourceTree = "<group>"; };
 		18B684F206944F2000CC6A1E /* Flags.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = Flags.h; sourceTree = "<group>"; };
 		18B684F306944F2000CC6A1E /* PrivateTypes.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = PrivateTypes.h; sourceTree = "<group>"; };
 		18B684F406944F2000CC6A1E /* PublicTypes.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = PublicTypes.h; sourceTree = "<group>"; };
-		18B684FE06944F8800CC6A1E /* 4DPlugin-$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-")).cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 30; path = 4DPlugin-$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-")).cpp; sourceTree = "<group>"; };
+18B684FE06944F8800CC6A1E /* 4DPlugin-$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-")).cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 30; path = "4DPlugin-$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-")).cpp"; sourceTree = "<group>"; };
 		8D01CCD10486CAD60068D4B7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		D120937E13534DCC00A72CAA /* $4DEVAL($1.PRODUCT_NAME).h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = $4DEVAL($1.PRODUCT_NAME).h; sourceTree = "<group>"; };
+D120937E13534DCC00A72CAA /* 4DPlugin-$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-")).h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "4DPlugin-$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-")).h"; sourceTree = "<group>"; };
 		D130064E12F02D9700702C0E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		D13116A81A03ACB700DE1322 /* 4DPluginAPI.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = 4DPluginAPI.c; sourceTree = "<group>"; };
 		D134D4A91A030B06008D14EF /* manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = manifest.json; sourceTree = "<group>"; };
@@ -72,7 +72,7 @@
 				189286360695AD8900B05D6E /* Products */,
 				D16FBB3C22A4C07E008F0416 /* Frameworks */,
 			);
-			name = $4DEVAL($1.PRODUCT_NAME);
+name = "$4DEVAL($1.PRODUCT_NAME)";
 			sourceTree = "<group>";
 		};
 		089C1671FE841209C02AAC07 /* External Frameworks and Libraries */ = {
@@ -174,9 +174,9 @@
 			);
 			dependencies = (
 			);
-			name = $4DEVAL($1.PRODUCT_NAME);
+name = "$4DEVAL($1.PRODUCT_NAME)";
 			productInstallPath = "$(HOME)/Library/Bundles";
-			productName = $4DEVAL($1.PRODUCT_NAME);
+productName = "$4DEVAL($1.PRODUCT_NAME)";
 			productReference = 189286350695AD8900B05D6E /* $4DEVAL($1.PRODUCT_NAME).bundle */;
 			productType = "com.apple.product-type.bundle";
 		};
@@ -313,8 +313,8 @@ shellScript = "#DEVELOPER_ID_APPLICATION_CODE_SIGN_IDENTITY_NAME=`security find-
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = com.4D.$4DEVAL($1.PRODUCT_NAME);
-				PRODUCT_NAME = $4DEVAL($1.PRODUCT_NAME);
+PRODUCT_BUNDLE_IDENTIFIER = "com.4D.$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-"))";
+PRODUCT_NAME = "$4DEVAL($1.PRODUCT_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx10.11;
 				SECTORDER_FLAGS = "";
@@ -363,8 +363,8 @@ shellScript = "#DEVELOPER_ID_APPLICATION_CODE_SIGN_IDENTITY_NAME=`security find-
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = com.4D.$4DEVAL($1.PRODUCT_NAME);
-				PRODUCT_NAME = $4DEVAL($1.PRODUCT_NAME);
+PRODUCT_BUNDLE_IDENTIFIER = "com.4D.$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-"))";
+PRODUCT_NAME = "$4DEVAL($1.PRODUCT_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx10.11;
 				SECTORDER_FLAGS = "";
@@ -412,8 +412,8 @@ shellScript = "#DEVELOPER_ID_APPLICATION_CODE_SIGN_IDENTITY_NAME=`security find-
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = com.4D.$4DEVAL($1.PRODUCT_NAME);
-				PRODUCT_NAME = $4DEVAL($1.PRODUCT_NAME);
+PRODUCT_BUNDLE_IDENTIFIER = "com.4D.$4DEVAL(Replace string:C233($1.PRODUCT_NAME;" ";"-"))";
+PRODUCT_NAME = "$4DEVAL($1.PRODUCT_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx10.11;
 				SECTORDER_FLAGS = "";
