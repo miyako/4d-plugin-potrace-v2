@@ -36,6 +36,10 @@ void PluginMain(PA_long32 selector, PA_PluginParameters params) {
 	}
 }
 
+static void parse_dimensions(char *s, char **endptr, dim_t *dxp, dim_t *dyp);
+static dim_t parse_dimension(char *s, char **endptr);
+static int parse_color(char *s);
+
 #pragma mark -
 
 void Potrace(PA_PluginParameters params) {
@@ -47,6 +51,11 @@ void Potrace(PA_PluginParameters params) {
     
     if(h)
     {
+        image_format_t image_format = get_image_format(options);
+        turn_policy_t turn_policy = get_turn_policy(options);
+        svg_grouping_t svg_grouping = get_svg_grouping(options);
+        page_size_t page_size = get_page_size(options);
+        
         std::vector<unsigned char> buf(PA_GetHandleSize(h));
         memcpy(&buf[0], (const void *)PA_LockHandle(h), PA_GetHandleSize(h));
         
@@ -99,30 +108,353 @@ void Potrace(PA_PluginParameters params) {
                     backend_t backend;
                     memset(&backend, 0x00, sizeof(backend_t));
                     
-                    //backend:svg
-                    backend.name = (char *)"svg";
-                    backend.ext = (char *)".svg";
-                    backend.page_f = page_svg;
-                    backend.opticurve = 1;
-                    
-                    info.backend = &backend;
-                    
                     imginfo_t imginfo;
-                    imginfo.pixwidth = bmp->w;
-                    imginfo.pixheight = bmp->h;
-                    calc_dimensions(&imginfo, st->plist, &info);
+                    std::vector<unsigned char> buf;
                     
-                    PA_Picture picture = info.backend->page_f(st->plist, &imginfo, &info);
+                    PA_Picture picture = 0;
                     
-                    if(picture)
+                    if(ob_is_defined(options, L"turdsize"))
                     {
-                            ob_set_p(returnValue, L"image", picture);
+                        info.param->turdsize = ob_get_n(options, L"turdsize");
+                        ob_set_i(returnValue, L"turdsize", info.param->turdsize);
                     }
                     
+                    if(ob_is_defined(options, L"alphamax"))
+                    {
+                        info.param->alphamax = ob_get_n(options, L"alphamax");
+                        ob_set_n(returnValue, L"alphamax", info.param->alphamax);
+                    }
+                    
+                    if(ob_is_defined(options, L"opticurve"))
+                    {
+                        info.param->opticurve = ob_get_b(options, L"opticurve");
+                        ob_set_b(returnValue, L"opticurve", info.param->opticurve);
+                    }
+                    
+                    if(ob_is_defined(options, L"opttolerance"))
+                    {
+                        info.param->opttolerance = ob_get_n(options, L"opttolerance");
+                        ob_set_n(returnValue, L"opttolerance", info.param->opttolerance);
+                    }
+                    
+                    if(ob_is_defined(options, L"opaque"))
+                    {
+                        info.opaque = ob_get_b(options, L"opaque");
+                        ob_set_b(returnValue, L"opaque", info.opaque);
+                    }
+                    
+                    if(ob_is_defined(options, L"invert"))
+                    {
+                        info.invert = ob_get_b(options, L"invert");
+                        ob_set_b(returnValue, L"invert", info.invert);
+                    }
+           
+                    if(ob_is_defined(options, L"tight"))
+                    {
+                        info.tight = ob_get_b(options, L"tight");
+                        ob_set_b(returnValue, L"tight", info.tight);
+                    }
+                    
+                    if(ob_is_defined(options, L"angle"))
+                    {
+                        info.angle = ob_get_n(options, L"angle");
+                        ob_set_n(returnValue, L"angle", info.angle);
+                    }
+                    
+                    if(ob_is_defined(options, L"gamma"))
+                    {
+                        info.gamma = ob_get_n(options, L"gamma");
+                        ob_set_n(returnValue, L"gamma", info.gamma);
+                    }
+                    
+                    if(ob_is_defined(options, L"blacklevel"))
+                    {
+                        info.blacklevel = ob_get_n(options, L"blacklevel");
+                        ob_set_n(returnValue, L"blacklevel", info.blacklevel);
+                    }
+                    
+                    if(ob_is_defined(options, L"stretch"))
+                    {
+                        info.stretch = ob_get_n(options, L"stretch");
+                        ob_set_n(returnValue, L"stretch", info.stretch);
+                    }
+                    
+                    if(ob_is_defined(options, L"unit"))
+                    {
+                        info.unit = ob_get_n(options, L"unit");
+                        ob_set_n(returnValue, L"unit", info.unit);
+                    }
+                    
+                    if(ob_is_defined(options, L"longcoding"))
+                    {
+                        info.longcoding = ob_get_b(options, L"longcoding");
+                        ob_set_b(returnValue, L"longcoding", info.longcoding);
+                    }
+                    
+                    CUTF8String fillcolor;
+                    
+                    if(ob_get_a(options, L"fillcolor", &fillcolor))
+                    {
+                        int _fillcolor = parse_color((char *)fillcolor.c_str());
+                        info.fillcolor = _fillcolor != -1 ? _fillcolor : info.fillcolor;
+                        ob_set_i(options, L"fillcolor", info.fillcolor);
+                    }
+                    
+                    CUTF8String color;
+                    
+                    if(ob_get_a(options, L"color", &color))
+                    {
+                        int _color = parse_color((char *)color.c_str());
+                        info.color = _color != -1 ? _color : info.color;
+                        ob_set_i(options, L"color", info.color);
+                    }
+                    
+                    CUTF8String width, height, scale, resolution, bottommargin,
+                    topmargin, rightmargin, leftmargin;
+                    char *p;
+
+                    if(ob_get_a(options, L"leftmargin", &leftmargin))
+                    {
+                        dim_t lmar_d = parse_dimension((char *)leftmargin.c_str(), &p);
+                        if(!(*p)){
+                            info.lmar_d.x = lmar_d.x;
+                            info.lmar_d.d = lmar_d.d;
+                            PA_ObjectRef objMargin = PA_CreateObject();
+                            ob_set_n(objMargin, L"x", info.lmar_d.x);
+                            ob_set_n(objMargin, L"d", info.lmar_d.d);
+                            ob_set_o(options, L"leftmargin", objMargin);
+                        }
+                    }
+
+                    if(ob_get_a(options, L"rightmargin", &rightmargin))
+                    {
+                        dim_t rmar_d = parse_dimension((char *)rightmargin.c_str(), &p);
+                        if(!(*p)){
+                            info.rmar_d.x = rmar_d.x;
+                            info.rmar_d.d = rmar_d.d;
+                            PA_ObjectRef objMargin = PA_CreateObject();
+                            ob_set_n(objMargin, L"x", info.rmar_d.x);
+                            ob_set_n(objMargin, L"d", info.rmar_d.d);
+                            ob_set_o(options, L"rightmargin", objMargin);
+                        }
+                    }
+                    
+                    if(ob_get_a(options, L"topmargin", &topmargin))
+                    {
+                        dim_t tmar_d = parse_dimension((char *)topmargin.c_str(), &p);
+                        if(!(*p)){
+                            info.tmar_d.x = tmar_d.x;
+                            info.tmar_d.d = tmar_d.d;
+                            PA_ObjectRef objMargin = PA_CreateObject();
+                            ob_set_n(objMargin, L"x", info.tmar_d.x);
+                            ob_set_n(objMargin, L"d", info.tmar_d.d);
+                            ob_set_o(options, L"topmargin", objMargin);
+                        }
+                    }
+                    
+                    if(ob_get_a(options, L"bottommargin", &bottommargin))
+                    {
+                        dim_t bmar_d = parse_dimension((char *)bottommargin.c_str(), &p);
+                        if(!(*p)){
+                            info.bmar_d.x = bmar_d.x;
+                            info.bmar_d.d = bmar_d.d;
+                            PA_ObjectRef objMargin = PA_CreateObject();
+                            ob_set_n(objMargin, L"x", info.bmar_d.x);
+                            ob_set_n(objMargin, L"d", info.bmar_d.d);
+                            ob_set_o(options, L"bottommargin", objMargin);
+                        }
+                    }
+                    
+                    if(ob_get_a(options, L"resolution", &resolution))
+                    {
+                        dim_t dimx, dimy;
+                        parse_dimensions((char *)resolution.c_str(), &p, &dimx, &dimy);
+                        if (*p == 0 && dimx.d == 0 && dimy.d == 0 && dimx.x != 0.0 && dimy.x != 0.0) {
+                            info.rx = dimx.x;
+                            info.ry = dimy.x;
+                            ob_set_n(options, L"rx", info.rx);
+                            ob_set_n(options, L"ry", info.ry);
+                        }
+                    }
+                    
+                    if(ob_get_a(options, L"scale", &scale))
+                    {
+                        dim_t dimx, dimy;
+                        parse_dimensions((char *)scale.c_str(), &p, &dimx, &dimy);
+                        if (*p == 0 && dimx.d == 0 && dimy.d == 0) {
+                            info.sx = dimx.x;
+                            info.sy = dimy.x;
+                            ob_set_n(options, L"sx", info.sx);
+                            ob_set_n(options, L"sy", info.sy);
+                        }
+                    }
+                    
+                    if(ob_get_a(options, L"width", &width))
+                    {
+                        dim_t _width = parse_dimension((char *)width.c_str(), &p);
+                        if(!(*p)){
+                            info.width_d.x = _width.x;
+                            info.width_d.d = _width.d;
+                            PA_ObjectRef objWidth = PA_CreateObject();
+                            ob_set_n(objWidth, L"x", info.width_d.x);
+                            ob_set_n(objWidth, L"d", info.width_d.d);
+                            ob_set_o(options, L"width", objWidth);
+                        }
+                    }
+                    
+                    if(ob_get_a(options, L"height", &height))
+                    {
+                        dim_t _height = parse_dimension((char *)height.c_str(), &p);
+                        if(!(*p)){
+                            info.height_d.x = _height.x;
+                            info.height_d.d = _height.d;
+                            PA_ObjectRef objHeight = PA_CreateObject();
+                            ob_set_n(objHeight, L"x", info.height_d.x);
+                            ob_set_n(objHeight, L"d", info.height_d.d);
+                            ob_set_o(options, L"height", objHeight);
+                        }
+                    }
+                    
+                    switch (page_size) {
+                        case page_size_A3:
+                            info.paperwidth = 842;
+                            info.paperheight = 1191;
+                            break;
+                        case page_size_A4:
+                            info.paperwidth = 595;
+                            info.paperheight = 842;
+                            break;
+                        case page_size_A5:
+                            info.paperwidth = 421;
+                            info.paperheight = 595;
+                            break;
+                        case page_size_B5:
+                            info.paperwidth = 516;
+                            info.paperheight = 729;
+                            break;
+                        case page_size_Statement:
+                            info.paperwidth = 396;
+                            info.paperheight = 612;
+                            break;
+                        case page_size_Executive:
+                            info.paperwidth = 540;
+                            info.paperheight = 720;
+                            break;
+                        case page_size_Tabloid:
+                            info.paperwidth = 792;
+                            info.paperheight = 1224;
+                            break;
+                        case page_size_Quarto:
+                            info.paperwidth = 610;
+                            info.paperheight = 780;
+                            break;
+                        case page_size_Letter:
+                            info.paperwidth = 612;
+                            info.paperheight = 792;
+                            break;
+                        case page_size_Legal:
+                            info.paperwidth = 612;
+                            info.paperheight = 1008;
+                            break;
+                        case page_size_Folio:
+                            info.paperwidth = 612;
+                            info.paperheight = 936;
+                            break;
+                        case page_size_10x14:
+                            info.paperwidth = 720;
+                            info.paperheight = 1008;
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                    switch (svg_grouping) {
+                        case svg_grouping_connected:
+                            info.grouping = 1;
+                            break;
+                        case svg_grouping_hierarchical:
+                            info.grouping = 2;
+                            break;
+                        default:
+                            info.grouping = 0;
+                            break;
+                    }
+                    
+                    switch (turn_policy) {
+                        case turn_policy_black:
+                            info.param->turnpolicy = POTRACE_TURNPOLICY_BLACK;
+                            ob_set_s(returnValue, L"policy", "black");
+                            break;
+                        case turn_policy_white:
+                            info.param->turnpolicy = POTRACE_TURNPOLICY_WHITE;
+                            ob_set_s(returnValue, L"policy", "white");
+                            break;
+                        case turn_policy_right:
+                            info.param->turnpolicy = POTRACE_TURNPOLICY_RIGHT;
+                            ob_set_s(returnValue, L"policy", "right");
+                            break;
+                        case turn_policy_left:
+                            info.param->turnpolicy = POTRACE_TURNPOLICY_LEFT;
+                            ob_set_s(returnValue, L"policy", "left");
+                            break;
+                        case turn_policy_minority:
+                            info.param->turnpolicy = POTRACE_TURNPOLICY_MINORITY;
+                            ob_set_s(returnValue, L"policy", "minority");
+                            break;
+                        case turn_policy_majority:
+                            info.param->turnpolicy = POTRACE_TURNPOLICY_MAJORITY;
+                            ob_set_s(returnValue, L"policy", "majority");
+                            break;
+                        case turn_policy_random:
+                            info.param->turnpolicy = POTRACE_TURNPOLICY_RANDOM;
+                            ob_set_s(returnValue, L"policy", "random");
+                            break;
+                    }
+                    
+                    switch (image_format) {
+                        case image_format_pdf:
+                            //backend:pdf
+                            backend.name = (char *)"pdf";
+                            backend.ext = (char *)".pdf";
+                            backend.init_f = init_pdf;
+                            backend.term_f = term_pdf;
+                            backend.page_f = page_pdf;
+                            backend.opticurve = 1;
+                            info.backend = &backend;
+                            imginfo.pixwidth = bmp->w;
+                            imginfo.pixheight = bmp->h;
+                            calc_dimensions(&imginfo, st->plist, &info);
+                            picture = info.backend->page_f(buf, st->plist, &imginfo, &info);
+                            ob_set_s(returnValue, L"format", ".pdf");
+                            break;
+                            
+                        default:
+                            //backend:svg
+                            backend.name = (char *)"svg";
+                            backend.ext = (char *)".svg";
+//                            backend.init_f
+                            backend.page_f = page_svg;
+//                            backend.page_f
+                            backend.opticurve = 1;
+                            info.backend = &backend;
+                            imginfo.pixwidth = bmp->w;
+                            imginfo.pixheight = bmp->h;
+                            calc_dimensions(&imginfo, st->plist, &info);
+                            picture = info.backend->page_f(buf, st->plist, &imginfo, &info);
+                            ob_set_s(returnValue, L"format", ".svg");
+                            break;
+                    }
+
+                    if(picture)
+                    {
+                        ob_set_p(returnValue, L"image", picture);
+                    }
+                
+                    
                 }
+                
                 potrace_state_free(st);
             }
-            
             potrace_param_free(param);
             bm_free(bmp);
         }
@@ -149,4 +481,246 @@ void Mkbitmap(PA_PluginParameters params) {
      }
      */
 
+}
+
+turn_policy_t get_turn_policy(PA_ObjectRef options) {
+    
+    turn_policy_t turn_policy = turn_policy_minority;
+    
+    CUTF8String policy;
+    if(ob_get_a(options, L"policy", &policy) || ob_get_a(options, L"turnpolicy", &policy))
+    {
+        if(policy == (const uint8_t *)"black"){
+            turn_policy = turn_policy_black;
+            goto get_turn_policy_exit;
+        }
+        if(policy == (const uint8_t *)"white"){
+            turn_policy = turn_policy_white;
+            goto get_turn_policy_exit;
+        }
+        if(policy == (const uint8_t *)"right"){
+            turn_policy = turn_policy_right;
+            goto get_turn_policy_exit;
+        }
+        if(policy == (const uint8_t *)"left"){
+            turn_policy = turn_policy_left;
+            goto get_turn_policy_exit;
+        }
+        if(policy == (const uint8_t *)"minority"){
+            turn_policy = turn_policy_minority;
+            goto get_turn_policy_exit;
+        }
+        if(policy == (const uint8_t *)"majority"){
+            turn_policy = turn_policy_majority;
+            goto get_turn_policy_exit;
+        }
+        if(policy == (const uint8_t *)"random"){
+            turn_policy = turn_policy_random;
+            goto get_turn_policy_exit;
+        }
+    }
+    
+    get_turn_policy_exit :
+    
+    return turn_policy;
+}
+
+svg_grouping_t get_svg_grouping(PA_ObjectRef options) {
+    
+    svg_grouping_t svg_grouping = svg_grouping_flat;
+    
+    CUTF8String group;
+    if(ob_get_a(options, L"group", &group))
+    {
+        if(group == (const uint8_t *)"flat"){
+            svg_grouping = svg_grouping_flat;
+            goto svg_grouping_exit;
+        }
+        if(group == (const uint8_t *)"connected"){
+            svg_grouping = svg_grouping_connected;
+            goto svg_grouping_exit;
+        }
+        if(group == (const uint8_t *)"hierarchical"){
+            svg_grouping = svg_grouping_hierarchical;
+            goto svg_grouping_exit;
+        }
+    }
+    
+    svg_grouping_exit :
+    
+    return svg_grouping;
+}
+
+image_format_t get_image_format(PA_ObjectRef options) {
+    
+    image_format_t image_format = image_format_svg;
+    
+    CUTF8String format;
+    if(ob_get_a(options, L"format", &format))
+    {
+        if(format == (const uint8_t *)".svg"){
+            image_format = image_format_svg;
+            goto get_image_format_exit;
+        }
+        if(format == (const uint8_t *)".pdf"){
+            image_format = image_format_pdf;
+            goto get_image_format_exit;
+        }
+    }
+    
+    get_image_format_exit :
+    
+    return image_format;
+}
+
+page_size_t get_page_size(PA_ObjectRef options) {
+    
+    page_size_t page_size = page_size_A4;
+    
+    CUTF8String pagesize;
+    if(ob_get_a(options, L"pagesize", &pagesize))
+    {
+        if(pagesize == (const uint8_t *)"A4"){
+            page_size = page_size_A4;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"A3"){
+            page_size = page_size_A3;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"A5"){
+            page_size = page_size_A5;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"B5"){
+            page_size = page_size_B5;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"Letter"){
+            page_size = page_size_Letter;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"Legal"){
+            page_size = page_size_Legal;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"Tabloid"){
+            page_size = page_size_Tabloid;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"Statement"){
+            page_size = page_size_Statement;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"Executive"){
+            page_size = page_size_Executive;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"Folio"){
+            page_size = page_size_Folio;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"Quarto"){
+            page_size = page_size_Quarto;
+            goto get_page_size_exit;
+        }
+        if(pagesize == (const uint8_t *)"10x14"){
+            page_size = page_size_10x14;
+            goto get_page_size_exit;
+        }
+    }
+    
+    get_page_size_exit :
+    
+    return page_size;
+}
+
+static dim_t parse_dimension(char *s, char **endptr) {
+    
+    char *p;
+    dim_t res;
+    
+    res.x = strtod(s, &p);
+    res.d = 0;
+    if (p!=s) {
+        if (!strncasecmp(p, "in", 2)) {
+            res.d = DIM_IN;
+            p += 2;
+        } else if (!strncasecmp(p, "cm", 2)) {
+            res.d = DIM_CM;
+            p += 2;
+        } else if (!strncasecmp(p, "mm", 2)) {
+            res.d = DIM_MM;
+            p += 2;
+        } else if (!strncasecmp(p, "pt", 2)) {
+            res.d = DIM_PT;
+            p += 2;
+        }
+    }
+    if (endptr!=NULL) {
+        *endptr = p;
+    }
+    return res;
+}
+
+static void parse_dimensions(char *s, char **endptr, dim_t *dxp, dim_t *dyp) {
+    
+    char *p, *q;
+    dim_t dx, dy;
+    
+    dx = parse_dimension(s, &p);
+    if (p==s) {
+        goto fail;
+    }
+    if (*p != 'x') {
+        goto fail;
+    }
+    p++;
+    dy = parse_dimension(p, &q);
+    if (q==p) {
+        goto fail;
+    }
+    if (dx.d && !dy.d) {
+        dy.d = dx.d;
+    } else if (!dx.d && dy.d) {
+        dx.d = dy.d;
+    }
+    *dxp = dx;
+    *dyp = dy;
+    if (endptr != NULL) {
+        *endptr = q;
+    }
+    return;
+    
+fail:
+    dx.x = dx.d = dy.x = dy.d = 0;
+    *dxp = dx;
+    *dyp = dy;
+    if (endptr != NULL) {
+        *endptr = s;
+    }
+    return;
+}
+
+static int parse_color(char *s) {
+    
+    int i, d;
+    int col = 0;
+    
+    if (s[0] != '#' || strlen(s) != 7) {
+        return -1;
+    }
+    for (i=0; i<6; i++) {
+        d = s[6-i];
+        if (d >= '0' && d <= '9') {
+            col |= (d-'0') << (4*i);
+        } else if (d >= 'a' && d <= 'f') {
+            col |= (d-'a'+10) << (4*i);
+        } else if (d >= 'A' && d <= 'F') {
+            col |= (d-'A'+10) << (4*i);
+        } else {
+            return -1;
+        }
+    }
+    return col;
 }

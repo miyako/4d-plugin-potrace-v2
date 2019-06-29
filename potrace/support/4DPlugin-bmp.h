@@ -1,3 +1,8 @@
+/* Copyright (C) 2001-2017 Peter Selinger.
+ This file is part of Potrace. It is free software and it is covered
+ by the GNU General Public License. See the file COPYING for details. */
+
+
 #ifndef POTRACE_BMP_H
 #define POTRACE_BMP_H
 

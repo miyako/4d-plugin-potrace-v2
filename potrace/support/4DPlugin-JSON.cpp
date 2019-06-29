@@ -111,6 +111,26 @@ void ob_set_a(PA_ObjectRef obj, const wchar_t *_key, const wchar_t *_value) {
     }
 }
 
+void ob_set_o(PA_ObjectRef obj, const wchar_t *_key, PA_ObjectRef value) {
+    
+    if(obj)
+    {
+        if(value)
+        {
+            PA_Variable v = PA_CreateVariable(eVK_Object);
+            CUTF16String ukey;
+            json_wconv(_key, &ukey);
+            PA_Unistring key = PA_CreateUnistring((PA_Unichar *)ukey.c_str());
+            
+            PA_SetObjectVariable(&v, value);
+            PA_SetObjectProperty(obj, &key, v);
+            
+            PA_DisposeUnistring(&key);
+            PA_ClearVariable(&v);
+        }
+    }
+}
+
 void ob_set_c(PA_ObjectRef obj, const wchar_t *_key, PA_CollectionRef value) {
     
     if(obj)
@@ -128,6 +148,23 @@ void ob_set_c(PA_ObjectRef obj, const wchar_t *_key, PA_CollectionRef value) {
             PA_DisposeUnistring(&key);
             PA_ClearVariable(&v);
         }
+    }
+}
+
+void ob_set_n(PA_ObjectRef obj, const wchar_t *_key, double value) {
+    
+    if(obj)
+    {
+        PA_Variable v = PA_CreateVariable(eVK_Real);
+        CUTF16String ukey;
+        json_wconv(_key, &ukey);
+        PA_Unistring key = PA_CreateUnistring((PA_Unichar *)ukey.c_str());
+        
+        PA_SetRealVariable(&v, value);
+        PA_SetObjectProperty(obj, &key, v);
+        
+        PA_DisposeUnistring(&key);
+        PA_ClearVariable(&v);
     }
 }
 

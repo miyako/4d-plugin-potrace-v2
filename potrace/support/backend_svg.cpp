@@ -323,7 +323,7 @@ static void write_paths_transparent(std::string &fout, potrace_path_t *tree, inf
 #pragma mark Backend
 
 /* public interface for SVG */
-PA_Picture page_svg(potrace_path_t *plist, imginfo_t *imginfo, info_t *info) {
+PA_Picture page_svg(std::vector<unsigned char> &buf, potrace_path_t *plist, imginfo_t *imginfo, info_t *info) {
 
     double bboxx = imginfo->trans.bb[0]+imginfo->lmar+imginfo->rmar;
     double bboxy = imginfo->trans.bb[1]+imginfo->tmar+imginfo->bmar;
@@ -416,10 +416,12 @@ PA_Picture page_svg(potrace_path_t *plist, imginfo_t *imginfo, info_t *info) {
 
 /* the Gimppath backend is identical, except that it disables
    --opaque, enables --flat, and the dimensions are pixel-based */
-PA_Picture page_gimp(potrace_path_t *plist, imginfo_t *imginfo, info_t *info) {
+PA_Picture page_gimp(std::vector<unsigned char> &buf, potrace_path_t *plist, imginfo_t *imginfo, info_t *info) {
+    
+    /* buf is not used for svg */
     
   info->opaque = 0;
   info->grouping = 0;
     
-  return page_svg(plist, imginfo, info);
+  return page_svg(buf, plist, imginfo, info);
 }

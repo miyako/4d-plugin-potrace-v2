@@ -182,7 +182,7 @@ struct backend_s {
     int multi;              /* multi-page backend? */
     int (*init_f)(std::vector<unsigned char> &fout, info_t *info);
                             /* initialization function */
-    PA_Picture (*page_f)(potrace_path_t *plist, imginfo_t *imginfo, info_t *info);
+    PA_Picture (*page_f)(std::vector<unsigned char> &fout, potrace_path_t *plist, imginfo_t *imginfo, info_t *info);
                             /* per-bitmap function */
     int (*term_f)(std::vector<unsigned char> &fout, info_t *info);
                             /* finalization function */
@@ -193,7 +193,58 @@ typedef struct backend_s backend_t;
 #include "4DPlugin-bbox.h"
 
 #include "backend_svg.h"
+#include "backend_pdf.h"
 
 #include "4DPlugin-JSON.h"
+
+typedef enum image_formats
+{
+    image_format_svg  = 0,
+    image_format_pdf  = 1
+}image_format_t;
+
+image_format_t get_image_format(PA_ObjectRef options);
+
+typedef enum turn_policy
+{
+    turn_policy_black       = 0,
+    turn_policy_white       = 1,
+    turn_policy_right       = 2,
+    turn_policy_left        = 3,
+    turn_policy_minority    = 4,
+    turn_policy_majority    = 5,
+    turn_policy_random      = 6
+}turn_policy_t;
+
+turn_policy_t get_turn_policy(PA_ObjectRef options);
+
+typedef unsigned int turdsize_t;
+
+typedef enum svg_grouping
+{
+    svg_grouping_flat           = 0,
+    svg_grouping_connected      = 1,
+    svg_grouping_hierarchical   = 2
+}svg_grouping_t;
+
+svg_grouping_t get_svg_grouping(PA_ObjectRef options);
+
+typedef enum page_size
+{
+    page_size_A4       = 0,
+    page_size_A3       = 1,
+    page_size_A5       = 2,
+    page_size_B5        = 3,
+    page_size_Letter    = 4,
+    page_size_Legal    = 5,
+    page_size_Tabloid      = 6,
+    page_size_Statement      = 7,
+    page_size_Executive      = 8,
+    page_size_Folio      = 9,
+    page_size_Quarto      = 10,
+    page_size_10x14      = 11
+}page_size_t;
+
+page_size_t get_page_size(PA_ObjectRef options);
 
 #endif /* PLUGIN_POTRACE_H */

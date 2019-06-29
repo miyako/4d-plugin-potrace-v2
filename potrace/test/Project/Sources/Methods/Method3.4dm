@@ -10,6 +10,7 @@ $constantsXlfPath:=$templatesFolder+"constants.xlf"
 $constantsXlf:=Document to text:C1236($constantsXlfPath;"utf-8")
 $projectFolder:=$path.parentFolder
 $constantsJsonPath:=$projectFolder+"constants.json"
+C_OBJECT:C1216($json)
 $json:=JSON Parse:C1218(Document to text:C1236($constantsJsonPath;"utf-8"))
 
 PROCESS 4D TAGS:C816($constantsXlf;$constantsXlf;$params;$json)

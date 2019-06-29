@@ -6,7 +6,7 @@
 #ifndef FLATE_H
 #define FLATE_H
 
-int dummy_xship(FILE *f, int filter, const char *s, int len);
+//int dummy_xship(FILE *f, int filter, const char *s, int len);
 int flate_xship(FILE *f, int filter, const char *s, int len);
 int pdf_xship(FILE *f, int filter, const char *s, int len);
 int lzw_xship(FILE *f, int filter, const char *s, int len);
