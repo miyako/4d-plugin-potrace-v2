@@ -8,6 +8,8 @@
 
 #include "4DPlugin-Potrace.h"
 
+#include <vector>
+
 int bm_readbody_bmp(std::vector<unsigned char> &buf, double threshold, potrace_bitmap_t **bmp);
 
 /* reset padding boundary */

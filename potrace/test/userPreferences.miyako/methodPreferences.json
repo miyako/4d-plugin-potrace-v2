@@ -36,12 +36,12 @@
 		"stamp": "2019-06-24T07:13:55.848Z"
 	},
 	"Sources/Methods/test.4dm": {
-		"startSelection": 34,
-		"endSelection": 34,
-		"firstSelectedLine": 12,
-		"lastSelectedLine": 12,
+		"startSelection": 0,
+		"endSelection": 0,
+		"firstSelectedLine": 0,
+		"lastSelectedLine": 0,
 		"folding": [],
 		"bookmarks": [],
-		"stamp": "2019-06-28T07:01:11.104Z"
+		"stamp": "2019-06-28T07:01:11.000Z"
 	}
 }

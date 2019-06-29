@@ -4,7 +4,48 @@
 #include "4DPluginAPI.h"
 #include <string>
 #include <vector>
+#include <map>
+#include <iostream>     // std::cout
+#include <iterator>     // std::back_inserter
+#include <vector>       // std::vector
+#include <algorithm>    // std::copy
+
+#ifdef _WIN32
+//some external libraries assume first load; include this file after them 
+//need to load winsock2 before windows
+//BSD wrappers
+#define close closesocket
+#define TickCount GetTickCount
+#define getpid GetCurrentProcessId
+#include <winsock2.h>
+
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+
+#include <windows.h>
+#include <iphlpapi.h>
+#include <icmpapi.h>
+
+#pragma comment(lib, "iphlpapi.lib")
+#include <time.h>
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
+#else
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#define SOCKET int
+#define SOCKET_ERROR (-1)
+#define INVALID_SOCKET (SOCKET)(~0)
+#endif
+
+#ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
+#endif
 
 typedef std::basic_string<PA_Unichar> CUTF16String;
 typedef std::basic_string<uint8_t> CUTF8String;
