@@ -48,6 +48,8 @@ void Mkbitmap(PA_PluginParameters params);
 #include "lists.h"
 
 #include "4DPlugin-bmp.h"
+#include "4DPlugin-gm.h"
+
 #include "4DPlugin-trans.h"
 
 /* structure to hold a dimensioned value */
@@ -93,7 +95,27 @@ struct info_s {
 };
 typedef struct info_s info_t;
 
-extern info_t info;
+//extern info_t info;
+
+/* structure to hold command line options */
+struct m_info_s {
+    char *outfile;      /* output file */
+    char **infiles;     /* input files */
+    int infilecount;    /* how many input files? */
+    int invert;         /* invert input? */
+    int highpass;       /* use highpass filter? */
+    double lambda;      /* highpass filter radius */
+    int lowpass;        /* use lowpass filter? */
+    double lambda1;     /* lowpass filter radius */
+    int scale;          /* scaling factor */
+    int linear;         /* linear scaling? */
+    int bilevel;        /* convert to bilevel? */
+    double level;       /* cutoff grey level */
+    const char *outext; /* default output file extension */
+};
+typedef struct m_info_s m_info_t;
+
+//extern m_info_t m_info;
 
 /* structure to hold per-image information, set e.g. by calc_dimensions */
 struct imginfo_s {
@@ -170,7 +192,8 @@ int bmp_forward(std::vector<unsigned char> buf, int *pos, int *count, int newPos
 int bmp_pad(std::vector<unsigned char> &buf, int *pos, int *count);
 int bmp_readint(std::vector<unsigned char> &buf, int *pos, int *count, int len, unsigned int *p);
 int bm_readbody_bmp(std::vector<unsigned char> &buf, double threshold, potrace_bitmap_t **bmp);
-
+int bm_readbody_pnm(std::vector<unsigned char> &buf, double threshold, potrace_bitmap_t **bmp);
+    
 #pragma mark - main.h
 
 /* backends and their characteristics */

@@ -18,6 +18,8 @@
 		D130064F12F02D9700702C0E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D130064E12F02D9700702C0E /* Cocoa.framework */; };
 		D13116A91A03ACB700DE1322 /* 4DPluginAPI.c in Sources */ = {isa = PBXBuildFile; fileRef = D13116A81A03ACB700DE1322 /* 4DPluginAPI.c */; settings = {COMPILER_FLAGS = "-Wno-multichar"; }; };
 		D134D4AC1A030BA0008D14EF /* manifest.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = D134D4A91A030B06008D14EF /* manifest.json */; };
+		D1A8DB6B22C9A76B00D9BE80 /* 4DPlugin-gm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D1A8DB6922C9A76B00D9BE80 /* 4DPlugin-gm.cpp */; };
+		D1A8DB6C22C9A76B00D9BE80 /* 4DPlugin-gm.h in Headers */ = {isa = PBXBuildFile; fileRef = D1A8DB6A22C9A76B00D9BE80 /* 4DPlugin-gm.h */; };
 		D1C0E89B22C5DAFC000ED6F1 /* 4DPlugin-bbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D1C0E89122C5DAFC000ED6F1 /* 4DPlugin-bbox.cpp */; };
 		D1C0E89C22C5DAFC000ED6F1 /* backend_svg.h in Headers */ = {isa = PBXBuildFile; fileRef = D1C0E89222C5DAFC000ED6F1 /* backend_svg.h */; };
 		D1C0E89D22C5DAFC000ED6F1 /* 4DPlugin-trans.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D1C0E89322C5DAFC000ED6F1 /* 4DPlugin-trans.cpp */; };
@@ -61,6 +63,8 @@
 		D13116A81A03ACB700DE1322 /* 4DPluginAPI.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = 4DPluginAPI.c; sourceTree = "<group>"; };
 		D134D4A91A030B06008D14EF /* manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = manifest.json; sourceTree = "<group>"; };
 		D14D10DD1A03A8A5008B3411 /* constants.xlf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = constants.xlf; sourceTree = "<group>"; };
+		D1A8DB6922C9A76B00D9BE80 /* 4DPlugin-gm.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = "4DPlugin-gm.cpp"; sourceTree = "<group>"; };
+		D1A8DB6A22C9A76B00D9BE80 /* 4DPlugin-gm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "4DPlugin-gm.h"; sourceTree = "<group>"; };
 		D1C0E89122C5DAFC000ED6F1 /* 4DPlugin-bbox.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = "4DPlugin-bbox.cpp"; sourceTree = "<group>"; };
 		D1C0E89222C5DAFC000ED6F1 /* backend_svg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = backend_svg.h; sourceTree = "<group>"; };
 		D1C0E89322C5DAFC000ED6F1 /* 4DPlugin-trans.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = "4DPlugin-trans.cpp"; sourceTree = "<group>"; };
@@ -183,6 +187,8 @@
 				D1C0E89922C5DAFC000ED6F1 /* 4DPlugin-bmp.h */,
 				D1C0E8A822C5DB72000ED6F1 /* backend_pdf.cpp */,
 				D1C0E8A722C5DB72000ED6F1 /* backend_pdf.h */,
+				D1A8DB6922C9A76B00D9BE80 /* 4DPlugin-gm.cpp */,
+				D1A8DB6A22C9A76B00D9BE80 /* 4DPlugin-gm.h */,
 			);
 			path = support;
 			sourceTree = "<group>";
@@ -194,6 +200,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1A8DB6C22C9A76B00D9BE80 /* 4DPlugin-gm.h in Headers */,
 				18B684F706944F2000CC6A1E /* 4DPluginAPI.h in Headers */,
 				18B684F806944F2000CC6A1E /* EntryPoints.h in Headers */,
 				18B684F906944F2000CC6A1E /* Flags.h in Headers */,
@@ -310,6 +317,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1A8DB6B22C9A76B00D9BE80 /* 4DPlugin-gm.cpp in Sources */,
 				D1C0E89B22C5DAFC000ED6F1 /* 4DPlugin-bbox.cpp in Sources */,
 				D1C0E8AA22C5DB72000ED6F1 /* backend_pdf.cpp in Sources */,
 				18B684FF06944F8800CC6A1E /* 4DPlugin-Potrace.cpp in Sources */,

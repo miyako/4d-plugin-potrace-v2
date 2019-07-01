@@ -9,7 +9,7 @@
         },
         {
             "theme": "Mkbitmap",
-            "syntax": "Mkbitmap(&O;&J):J",
+            "syntax": "Mkbitmap(&O;&J):O",
             "threadSafe": true
         }
     ]

@@ -6,6 +6,8 @@ void bmp_pad_reset(int *count) {
     *count = 0;
 }
 
+#define TRY_STD(x) if (x) goto std_error
+
 /* forward to the new file position. Return 1 on EOF or error, else 0 */
 int bmp_forward(std::vector<unsigned char> buf, int *pos, int *count, int newPos) {
     
@@ -34,6 +36,20 @@ int bmp_pad(std::vector<unsigned char> &buf, int *pos, int *count) {
     return 0;
 }
 
+int bmp_fgetc(std::vector<unsigned char> &buf, int *pos) {
+
+    unsigned int start = *pos;
+    unsigned int c = 0;
+    
+    if((start + 1) > buf.size()) return 0;
+    
+    c = buf.at(start);
+    
+    *pos += 1;
+
+    return c;
+}
+
 /* read n-byte little-endian integer. Return 1 on EOF or error, else 0. Assume n<=4. */
 int bmp_readint(std::vector<unsigned char> &buf, int *pos, int *count, int len, unsigned int *p) {
     
@@ -53,6 +69,283 @@ int bmp_readint(std::vector<unsigned char> &buf, int *pos, int *count, int len, 
     *p = sum;
     
     return 0;
+}
+
+/* similar to readnum, but read only a single 0 or 1, and do not read
+ any characters after it. */
+
+int bmp_readbit(std::vector<unsigned char> &buf, int *pos) {
+    
+    int c;
+    
+    while (*pos < buf.size()) {
+        
+        c = buf.at(*pos);
+        
+        *pos += 1;
+        
+        if (c >= '0' && c <= '1') {
+            break;
+        }
+    }
+    
+    return c-'0';
+}
+
+static int bmp_readnum(std::vector<unsigned char> &buf, int *pos) {
+    
+    int c;
+    int acc;
+    
+    while (*pos < buf.size()) {
+        
+        c = buf.at(*pos);
+        
+        *pos += 1;
+        
+        if (c >= '0' && c <= '9') {
+            break;
+        }
+    }
+    
+    /* first digit is already in c */
+    acc = c-'0';
+    
+    while (*pos < buf.size()) {
+        
+        c = buf.at(*pos);
+
+        if (c < '0' || c > '9') {
+            break;
+        }else
+        {
+            acc *= 10;
+            acc += c-'0';
+            *pos += 1;
+        }
+    }
+
+    return acc;
+}
+
+int bm_readbody_pnm(std::vector<unsigned char> &buf, double threshold, potrace_bitmap_t **bmp) {
+
+    if (buf.size() < 2)
+        return -3;
+    
+    if (!(buf[0] == 'P' && buf[1] >= '1' && buf[1] <= '6'))
+        return -4;
+    
+    int magic = buf[1];
+    
+    potrace_bitmap_t *bm;
+    int x, y, i, b, b1, sum;
+    int bpr; /* bytes per row (as opposed to 4*bm->c) */
+    int w, h, max;
+    int realheight;  /* in case of incomplete file, keeps track of how
+                      many scan lines actually contain data */
+    
+    int bmp_pos = 2;  /* set file position */
+    
+    bm = NULL;
+    
+    w = bmp_readnum(buf, &bmp_pos);
+    if (w<0) {
+        goto format_error;
+    }
+    
+    h = bmp_readnum(buf, &bmp_pos);
+    if (h<0) {
+        goto format_error;
+    }
+    
+    /* allocate bitmap */
+    bm = bm_new(w, h);
+    if (!bm) {
+        goto std_error;
+    }
+    
+    realheight = 0;
+    
+    switch (magic) {
+        default:
+            /* not reached */
+            goto format_error;
+            
+        case '1':
+            /* read P1 format: PBM ascii */
+            
+            for (y=0; y<h; y++) {
+                realheight = y+1;
+                for (x=0; x<w; x++) {
+                    b = bmp_readbit(buf, &bmp_pos);
+                    if (b<0) {
+                        goto eof;
+                    }
+                    BM_UPUT(bm, x, y, b);
+                }
+            }
+            break;
+            
+        case '2':
+            /* read P2 format: PGM ascii */
+            
+            max = bmp_readnum(buf, &bmp_pos);
+            if (max<1) {
+                goto format_error;
+            }
+            
+            for (y=0; y<h; y++) {
+                realheight = y+1;
+                for (x=0; x<w; x++) {
+                    b = bmp_readnum(buf, &bmp_pos);
+                    if (b<0) {
+                        goto eof;
+                    }
+                    BM_UPUT(bm, x, y, b > threshold * max ? 0 : 1);
+                }
+            }
+            break;
+            
+        case '3':
+            /* read P3 format: PPM ascii */
+            
+            max = bmp_readnum(buf, &bmp_pos);
+            if (max<1) {
+                goto format_error;
+            }
+            
+            for (y=0; y<h; y++) {
+                realheight = y+1;
+                for (x=0; x<w; x++) {
+                    sum = 0;
+                    for (i=0; i<3; i++) {
+                        b = bmp_readnum(buf, &bmp_pos);
+                        if (b<0) {
+                            goto eof;
+                        }
+                        sum += b;
+                    }
+                    BM_UPUT(bm, x, y, sum > 3 * threshold * max ? 0 : 1);
+                }
+            }
+            break;
+            
+        case '4':
+            /* read P4 format: PBM raw */
+            
+            b = bmp_fgetc(buf, &bmp_pos);  /* read single white-space character after height */
+            if (b==EOF) {
+                goto format_error;
+            }
+            
+            bpr = (w+7)/8;
+            
+            for (y=0; y<h; y++) {
+                realheight = y+1;
+                for (i=0; i<bpr; i++) {
+                    b = bmp_fgetc(buf, &bmp_pos);
+                    if (b==EOF) {
+                        goto eof;
+                    }
+                    *bm_index(bm, i*8, y) |= ((potrace_word)b) << (8*(BM_WORDSIZE-1-(i % BM_WORDSIZE)));
+                }
+            }
+            break;
+            
+        case '5':
+            /* read P5 format: PGM raw */
+            
+            max = bmp_readnum(buf, &bmp_pos);
+            if (max<1) {
+                goto format_error;
+            }
+            
+            b = bmp_fgetc(buf, &bmp_pos);  /* read single white-space character after max */
+            if (b==EOF) {
+                goto format_error;
+            }
+            
+            for (y=0; y<h; y++) {
+                realheight = y+1;
+                for (x=0; x<w; x++) {
+                    b = bmp_fgetc(buf, &bmp_pos);
+                    if (b==EOF)
+                        goto eof;
+                    if (max>=256) {
+                        b <<= 8;
+                        b1 = bmp_fgetc(buf, &bmp_pos);
+                        if (b1==EOF)
+                            goto eof;
+                        b |= b1;
+                    }
+                    BM_UPUT(bm, x, y, b > threshold * max ? 0 : 1);
+                }
+            }
+            break;
+            
+        case '6':
+            /* read P6 format: PPM raw */
+            
+            max = bmp_readnum(buf, &bmp_pos);
+            if (max<1) {
+                goto format_error;
+            }
+            
+            b = bmp_fgetc(buf, &bmp_pos);  /* read single white-space character after max */
+            if (b==EOF) {
+                goto format_error;
+            }
+            
+            for (y=0; y<h; y++) {
+                realheight = y+1;
+                for (x=0; x<w; x++) {
+                    sum = 0;
+                    for (i=0; i<3; i++) {
+                        b = bmp_fgetc(buf, &bmp_pos);
+                        if (b==EOF) {
+                            goto eof;
+                        }
+                        if (max>=256) {
+                            b <<= 8;
+                            b1 = bmp_fgetc(buf, &bmp_pos);
+                            if (b1==EOF)
+                                goto eof;
+                            b |= b1;
+                        }
+                        sum += b;
+                    }
+                    BM_UPUT(bm, x, y, sum > 3 * threshold * max ? 0 : 1);
+                }
+            }
+            break;
+    }
+    
+    bm_flip(bm);
+    *bmp = bm;
+    return 0;
+    
+eof:
+    TRY_STD(bm_resize(bm, realheight));
+    bm_flip(bm);
+    *bmp = bm;
+    return 1;
+    
+format_error:
+    bm_free(bm);
+    if (magic == '1' || magic == '4') {
+//        bm_read_error = "invalid pbm file";
+    } else if (magic == '2' || magic == '5') {
+//        bm_read_error = "invalid pgm file";
+    } else {
+//        bm_read_error = "invalid ppm file";
+    }
+    return -2;
+    
+std_error:
+    bm_free(bm);
+    return -1;
+
 }
 
 int bm_readbody_bmp(std::vector<unsigned char> &buf, double threshold, potrace_bitmap_t **bmp) {

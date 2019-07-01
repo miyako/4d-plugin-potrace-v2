@@ -10,8 +10,6 @@
 
 #include <vector>
 
-int bm_readbody_bmp(std::vector<unsigned char> &buf, double threshold, potrace_bitmap_t **bmp);
-
 /* reset padding boundary */
 void bmp_pad_reset(int *count);
 int bmp_forward(std::vector<unsigned char> buf, int *pos, int *count, int newPos);

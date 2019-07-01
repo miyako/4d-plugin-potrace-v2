@@ -61,7 +61,14 @@ void Potrace(PA_PluginParameters params) {
         
         potrace_bitmap_t *bmp = NULL;
         
-        if(bm_readbody_bmp(buf, 0, &bmp) >= 0)
+        int r = bm_readbody_bmp(buf, 0, &bmp);
+        
+        if(r < 0)
+        {
+            r = bm_readbody_pnm(buf, 0, &bmp);
+        }
+        
+        if(r >= 0)
         {
             potrace_param_t *param = potrace_param_default();
             potrace_state_t *st = potrace_trace(param, bmp);
@@ -109,7 +116,6 @@ void Potrace(PA_PluginParameters params) {
                     memset(&backend, 0x00, sizeof(backend_t));
                     
                     imginfo_t imginfo;
-                    std::vector<unsigned char> buf;
                     
                     PA_Picture picture = 0;
                     
@@ -411,6 +417,8 @@ void Potrace(PA_PluginParameters params) {
                             break;
                     }
                     
+                    std::vector<unsigned char> buf_i;
+                    
                     switch (image_format) {
                         case image_format_pdf:
                             //backend:pdf
@@ -424,7 +432,7 @@ void Potrace(PA_PluginParameters params) {
                             imginfo.pixwidth = bmp->w;
                             imginfo.pixheight = bmp->h;
                             calc_dimensions(&imginfo, st->plist, &info);
-                            picture = info.backend->page_f(buf, st->plist, &imginfo, &info);
+                            picture = info.backend->page_f(buf_i, st->plist, &imginfo, &info);
                             ob_set_s(returnValue, L"format", ".pdf");
                             break;
                             
@@ -440,7 +448,7 @@ void Potrace(PA_PluginParameters params) {
                             imginfo.pixwidth = bmp->w;
                             imginfo.pixheight = bmp->h;
                             calc_dimensions(&imginfo, st->plist, &info);
-                            picture = info.backend->page_f(buf, st->plist, &imginfo, &info);
+                            picture = info.backend->page_f(buf_i, st->plist, &imginfo, &info);
                             ob_set_s(returnValue, L"format", ".svg");
                             break;
                     }
@@ -467,21 +475,201 @@ void Potrace(PA_PluginParameters params) {
 
 void Mkbitmap(PA_PluginParameters params) {
     
-    /*
-     PA_ObjectRef returnValue = PA_CreateObject();
-     
-     PA_Handle h = PA_GetBlobHandleParameter( params, 1 );
-     PA_ObjectRef options = PA_GetObjectParameter( params, 2 );
-     
-     if(h)
-     {
-     PA_long32 size = PA_GetHandleSize(h);
-     
-     PA_UnlockHandle(h);
-     }
-     */
+    std::vector<unsigned char> buf_i;
+    
+    PA_Handle h = PA_GetBlobHandleParameter( params, 1 );
+    PA_ObjectRef options = PA_GetObjectParameter( params, 2 );
+    
+    if(h)
+    {
+        std::vector<unsigned char> buf(PA_GetHandleSize(h));
+        memcpy(&buf[0], (const void *)PA_LockHandle(h), PA_GetHandleSize(h));
+        
+        greymap_t *gm = NULL;
 
+        int x, y;
+        
+        if(gm_read(buf, &gm) >= 0)
+        {
+            m_info_t info;
+            memset(&info, 0x00, sizeof(m_info_t));
+            
+            info.outfile = NULL;    /* output file */
+            info.infiles = NULL;    /* input files */
+            info.infilecount = 0;   /* how many input files? */
+            info.invert = 0;        /* invert input? */
+            info.highpass = 1;      /* use highpass filter? */
+            info.lambda = 4;        /* highpass filter radius */
+            info.lowpass = 0;       /* use lowpass filter? */
+            info.lambda1 = 0;       /* lowpass filter radius */
+            info.scale = 2;         /* scaling factor */
+            info.linear = 0;        /* linear scaling? */
+            info.bilevel = 1;       /* convert to bilevel? */
+            info.level = 0.45;      /* cutoff grey level */
+            info.outext = ".pbm";   /* output file extension */
+            
+            if(ob_is_defined(options, L"filter"))
+            {
+                info.lambda = ob_get_n(options, L"filter");
+                info.highpass = 1;
+//                ob_set_b(returnValue, L"highpass", info.highpass);
+//                ob_set_n(returnValue, L"lambda", info.lambda);
+            }
+            
+            if(ob_is_defined(options, L"blur"))
+            {
+                info.lambda1 = ob_get_n(options, L"blur");
+                info.lowpass = 1;
+//                ob_set_b(returnValue, L"lowpass", info.lowpass);
+//                ob_set_n(returnValue, L"lambda1", info.lambda1);
+            }
+            
+            if(ob_is_defined(options, L"scale"))
+            {
+                info.scale = ob_get_n(options, L"scale");
+//                ob_set_i(returnValue, L"scale", info.scale);
+            }
+            
+            if(ob_is_defined(options, L"threshold"))
+            {
+                info.level = ob_get_n(options, L"threshold");
+                info.bilevel = 1;
+                info.outext = ".pbm";
+//                ob_set_b(returnValue, L"bilevel", info.bilevel);
+//                ob_set_s(returnValue, L"outext", info.outext);
+//                ob_set_i(returnValue, L"level", info.level);
+            }
+            
+            if(ob_is_defined(options, L"grey"))
+            {
+                if(ob_get_b(options, L"grey"))
+                {
+                    info.bilevel = 0;
+                    info.outext = ".pgm";
+//                    ob_set_b(returnValue, L"bilevel", info.bilevel);
+//                    ob_set_s(returnValue, L"outext", info.outext);
+                }
+            }
+            
+            if(ob_is_defined(options, L"linear"))
+            {
+                if(ob_get_b(options, L"linear"))
+                {
+                    info.linear = 1;
+//                    ob_set_b(returnValue, L"linear", info.linear);
+                }
+            }
+            
+            if(ob_is_defined(options, L"cubic"))
+            {
+                if(ob_get_b(options, L"cubic"))
+                {
+                    info.linear = 0;
+//                    ob_set_b(returnValue, L"linear", info.linear);
+                }
+            }
+            
+            if(ob_is_defined(options, L"nofilter"))
+            {
+                if(ob_get_b(options, L"nofilter"))
+                {
+                    info.highpass = 0;
+//                    ob_set_b(returnValue, L"highpass", info.highpass);
+                }
+            }
+            
+            if(ob_is_defined(options, L"invert"))
+            {
+                if(ob_get_b(options, L"invert"))
+                {
+                    info.invert = 1;
+//                    ob_set_b(returnValue, L"invert", info.invert);
+                }
+            }
+            
+            if(ob_is_defined(options, L"nodefaults"))
+            {
+                if(ob_get_b(options, L"nodefaults"))
+                {
+                    info.invert = 0;
+                    info.highpass = 0;
+                    info.scale = 1;
+                    info.bilevel = 0;
+                    info.outext = ".pgm";
+//                    ob_set_b(returnValue, L"invert", info.invert);
+//                    ob_set_b(returnValue, L"highpass", info.highpass);
+//                    ob_set_b(returnValue, L"scale", info.scale);
+//                    ob_set_b(returnValue, L"bilevel", info.bilevel);
+//                    ob_set_s(returnValue, L"outext", info.outext);
+                }
+            }
+            
+            if (info.invert) {
+                for (y=0; y<gm->h; y++) {
+                    for (x=0; x<gm->w; x++) {
+                        GM_UPUT(gm, x, y, 255-GM_UGET(gm, x, y));
+                    }
+                }
+            }
+            
+            if (info.highpass) {
+                if (highpass(gm, info.lambda)) {
+                    gm_free(gm);
+                    gm = NULL;
+                    goto mkbitmap_abort;
+                }
+            }
+            
+            if (info.lowpass) {
+                lowpass(gm, info.lambda1);
+            }
+            
+            void *sm = NULL;
+            
+            if (info.scale == 1 && info.bilevel) {  /* no interpolation necessary */
+                sm = threshold(gm, info.level);
+                gm_free(gm);
+                
+            } else if (info.scale == 1) {
+                sm = gm;
+            } else if (info.linear) {  /* linear interpolation */
+                sm = interpolate_linear(gm, info.scale, info.bilevel, info.level);
+                gm_free(gm);
+                
+            } else {  /* cubic interpolation */
+                sm = interpolate_cubic(gm, info.scale, info.bilevel, info.level);
+                gm_free(gm);
+                
+            }
+            
+            if (sm) {
+ 
+                potrace_bitmap_t *bm = NULL;
+                
+                if (info.bilevel) {
+                    bm = (potrace_bitmap_t *)sm;
+                    bm_writepbm(buf_i, bm);
+                    bm_free(bm);
+                } else {
+                    gm = (greymap_t *)sm;
+                    gm_writepgm(buf_i, gm, NULL, 1, GM_MODE_POSITIVE, 1.0);
+                    gm_free(gm);
+                }
+                
+                
+                
+            }
+
+        }
+        
+    mkbitmap_abort:
+        PA_UnlockHandle(h);
+    }
+    
+    PA_ReturnBlob(params, (void *)&buf_i[0], (PA_long32)buf_i.size());
 }
+
+#pragma mark -
 
 turn_policy_t get_turn_policy(PA_ObjectRef options) {
     
@@ -634,6 +822,8 @@ page_size_t get_page_size(PA_ObjectRef options) {
     
     return page_size;
 }
+
+#pragma mark static functions
 
 static dim_t parse_dimension(char *s, char **endptr) {
     
