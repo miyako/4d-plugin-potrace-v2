@@ -22,10 +22,6 @@
 	<dict>
 		<key>QuickLook/Thumbnail.png</key>
 		<dict>
-			<key>hash</key>
-			<data>
-			hC+U8EqvyIRM1lLakHLfvl4V9Tc=
-			</data>
 			<key>hash2</key>
 			<data>
 			nGfrvibB5KlzvZgF4Bra+l0HpRloxismgTLePnOwCdk=
@@ -33,10 +29,6 @@
 		</dict>
 		<key>Resources/English.lproj/InfoPlist.strings</key>
 		<dict>
-			<key>hash</key>
-			<data>
-			UC0Vd53lQ1eIoWi3a26FXGamJME=
-			</data>
 			<key>hash2</key>
 			<data>
 			bLaHcMCtmtMDN/YcOPUYr5viAHZpyeBfgbsypLTa6Qo=
@@ -46,10 +38,6 @@
 		</dict>
 		<key>Resources/constants.xlf</key>
 		<dict>
-			<key>hash</key>
-			<data>
-			0qaEIVf+eZQYSHakz3vnVvOtM80=
-			</data>
 			<key>hash2</key>
 			<data>
 			6wPd2tQRtH5YzIxaPqjmc3teFe/NJFD2EPZQRJlIIlc=
@@ -57,10 +45,6 @@
 		</dict>
 		<key>Windows/Potrace.4DX</key>
 		<dict>
-			<key>hash</key>
-			<data>
-			V1t5m8hiJEMX5GPSgHjgkSie2+w=
-			</data>
 			<key>hash2</key>
 			<data>
 			QRgTrXmmySx403q5oKThQ1v+uaeIWXAeeLF4fJUPG1k=
@@ -68,10 +52,6 @@
 		</dict>
 		<key>Windows64/Potrace.4DX</key>
 		<dict>
-			<key>hash</key>
-			<data>
-			Vs5C8wpkRcvaCVRpn2XJGzSeT8U=
-			</data>
 			<key>hash2</key>
 			<data>
 			YQl/CV1WtXi65cQzBPu8NE09bdNqolYYTyyRx6z9/0c=
@@ -81,10 +61,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			kMTKi5nSTHrzk85s9VPylTD/PD8=
+			dpONci2KRIy2sIS/myHpexAM1C0=
 			</data>
 			<key>requirement</key>
-			<string>identifier manifest and anchor apple generic and certificate leaf[subject.CN] = "Mac Developer: keisuke miyako (4W9UT59D3B)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
+			<string>identifier manifest and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = Y69CWUC25B</string>
 		</dict>
 	</dict>
 	<key>rules</key>
