@@ -1,4 +1,4 @@
-﻿{
+{
 	"Sources/Methods/Method1.4dm": {
 		"startSelection": 8,
 		"endSelection": 8,
@@ -36,13 +36,13 @@
 		"stamp": "2019-06-24T07:13:55.848Z"
 	},
 	"Sources/Methods/test.4dm": {
-		"startSelection": 40,
+		"startSelection": 0,
 		"endSelection": 0,
-		"firstSelectedLine": 11,
-		"lastSelectedLine": 11,
+		"firstSelectedLine": 0,
+		"lastSelectedLine": 0,
 		"folding": [],
 		"bookmarks": [],
-		"stamp": "2019-07-01T05:17:36.552Z"
+		"stamp": "2022-08-07T13:45:07.493Z"
 	},
 	"Sources/Methods/test_mkbitmap.4dm": {
 		"startSelection": 0,
@@ -51,6 +51,6 @@
 		"lastSelectedLine": 17,
 		"folding": [],
 		"bookmarks": [],
-		"stamp": "2019-07-01T05:19:15.143Z"
+		"stamp": "2022-08-07T13:45:07.493Z"
 	}
 }
