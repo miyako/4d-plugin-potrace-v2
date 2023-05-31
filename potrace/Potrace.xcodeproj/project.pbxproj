@@ -39,7 +39,7 @@
 		D134D4AB1A030B7A008D14EF /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = ..;
+			dstPath = "";
 			dstSubfolderSpec = 7;
 			files = (
 				D134D4AC1A030BA0008D14EF /* manifest.json in CopyFiles */,
@@ -308,7 +308,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "USER_NAME=keisuke.miyako@4d.com\nUUID=`uuidgen | tr -d - | tr -d '\\n' | tr '[:upper:]' '[:lower:]'`\nDEVELOPER_ID=`security find-identity -p codesigning -v | egrep 'Developer ID Application[^\"]+' -o`\nPRODUCT_PATH=\"$CODESIGNING_FOLDER_PATH\"\nxattr -cr \"$PRODUCT_PATH\"\ncodesign --remove-signature \"$PRODUCT_PATH\"\ncodesign --verbose --deep --timestamp --force --sign \"$DEVELOPER_ID\" \"$PRODUCT_PATH\"\nDMG_PATH=\"$PROJECT_DIR/$PRODUCT_NAME.dmg\"\nZIP_PATH=\"$PROJECT_DIR/$PRODUCT_NAME.zip\"\nrm \"$DMG_PATH\"\nhdiutil create -format UDBZ -plist -srcfolder \"$PRODUCT_PATH\" \"$DMG_PATH\"\necho \"xcrun stapler staple \\\"$PRODUCT_PATH\\\"\"\necho \"hdiutil create -format UDBZ -plist -srcfolder  \\\"$PRODUCT_PATH\\\" \\\"$DMG_PATH\\\" \"\necho \"ditto -c -k --keepParent \\\"$PRODUCT_PATH\\\" \\\"$ZIP_PATH\\\" \"\nxcrun altool --notarize-app --file \"$DMG_PATH\" --username \"$USER_NAME\" --password \"@keychain:altool\" --primary-bundle-id $PRODUCT_BUNDLE_IDENTIFIER.$UUID\nrm --force \"$ZIP_PATH\"\nrm --force \"$DMG_PATH\"\n";
+			shellScript = "if test \"$CONFIGURATION\" == 'Deployment'; then\n\n    USER_NAME=keisuke.miyako@4d.com\n    UUID=`uuidgen | tr -d - | tr -d '\\n' | tr '[:upper:]' '[:lower:]'`\n    DEVELOPER_ID=\"Developer ID Application: keisuke miyako (Y69CWUC25B)\"\n    PRODUCT_PATH=\"$CODESIGNING_FOLDER_PATH\"\n    \n    #clean\n    xattr -cr \"$PRODUCT_PATH\"\n    codesign --remove-signature \"$PRODUCT_PATH\"\n    \n    #sign\n    codesign --verbose --deep --timestamp --force --sign \"$DEVELOPER_ID\" \"$PRODUCT_PATH\"\n    \n    #archive\n    DMG_PATH=\"$PROJECT_DIR/$PRODUCT_NAME.dmg\"\n    ZIP_PATH=\"$PROJECT_DIR/$PRODUCT_NAME.zip\" #for windows\n    rm -f \"$DMG_PATH\"\n    hdiutil create -format UDBZ -plist -srcfolder \"$PRODUCT_PATH\" \"$DMG_PATH\"\n    rm -f \"$ZIP_PATH\"\n    ditto -c -k --keepParent \"$PRODUCT_PATH\" \"$ZIP_PATH\"\n    \n    xcrun notarytool submit \"$ZIP_PATH\" --keychain-profile \"notarytool\" --wait\n    xcrun notarytool submit \"$DMG_PATH\" --keychain-profile \"notarytool\" --wait\n        \n    xcrun stapler staple \"$DMG_PATH\"\n\nelse\n    echo \"No notarization performed as this is not a release build.\"\nfi\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

@@ -17,6 +17,10 @@
 		<data>
 		0qaEIVf+eZQYSHakz3vnVvOtM80=
 		</data>
+		<key>Resources/manifest.json</key>
+		<data>
+		s6qzyfLYHRVqca9AvZvsfWr13q4=
+		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
@@ -43,11 +47,11 @@
 			6wPd2tQRtH5YzIxaPqjmc3teFe/NJFD2EPZQRJlIIlc=
 			</data>
 		</dict>
-		<key>Windows/Potrace.4DX</key>
+		<key>Resources/manifest.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			QRgTrXmmySx403q5oKThQ1v+uaeIWXAeeLF4fJUPG1k=
+			fmwYWa9iFV6V8MkpvIqknlYqzq9hsCpp5PGOoBXCXzg=
 			</data>
 		</dict>
 		<key>Windows64/Potrace.4DX</key>
@@ -56,15 +60,6 @@
 			<data>
 			YQl/CV1WtXi65cQzBPu8NE09bdNqolYYTyyRx6z9/0c=
 			</data>
-		</dict>
-		<key>manifest.json</key>
-		<dict>
-			<key>cdhash</key>
-			<data>
-			dpONci2KRIy2sIS/myHpexAM1C0=
-			</data>
-			<key>requirement</key>
-			<string>identifier manifest and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = Y69CWUC25B</string>
 		</dict>
 	</dict>
 	<key>rules</key>
