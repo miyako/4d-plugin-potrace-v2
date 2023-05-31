@@ -1,4 +1,4 @@
-{
+﻿{
 	"Sources/Methods/Method1.4dm": {
 		"left": 105,
 		"top": 103,
@@ -36,9 +36,9 @@
 		"height": 642
 	},
 	"Sources/Methods/test_mkbitmap.4dm": {
-		"left": 318,
-		"top": 298,
+		"left": 319,
+		"top": 273,
 		"width": 1138,
-		"height": 617
+		"height": 642
 	}
 }
