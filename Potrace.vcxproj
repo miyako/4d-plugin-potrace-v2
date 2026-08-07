@@ -28,6 +28,7 @@
     <ClCompile Include="4DPlugin-Potrace.cpp" />
     <ClCompile Include="support\4DPlugin-bbox.cpp" />
     <ClCompile Include="support\4DPlugin-bmp.cpp" />
+    <ClCompile Include="support\4DPlugin-gm.cpp" />
     <ClCompile Include="support\4DPlugin-JSON.cpp" />
     <ClCompile Include="support\4DPlugin-trans.cpp" />
     <ClCompile Include="support\backend_pdf.cpp" />
@@ -42,6 +43,7 @@
     <ClInclude Include="4DPlugin-Potrace.h" />
     <ClInclude Include="support\4DPlugin-bbox.h" />
     <ClInclude Include="support\4DPlugin-bmp.h" />
+    <ClInclude Include="support\4DPlugin-gm.h" />
     <ClInclude Include="support\4DPlugin-JSON.h" />
     <ClInclude Include="support\4DPlugin-trans.h" />
     <ClInclude Include="support\backend_pdf.h" />
