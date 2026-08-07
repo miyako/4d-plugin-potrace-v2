@@ -49,6 +49,10 @@ void Potrace(PA_PluginParameters params) {
     PA_Handle h = PA_GetBlobHandleParameter( params, 1 );
     PA_ObjectRef options = PA_GetObjectParameter( params, 2 );
     
+    bool locked = false;
+    
+    try
+    {
     if(h)
     {
         image_format_t image_format = get_image_format(options);
@@ -56,8 +60,14 @@ void Potrace(PA_PluginParameters params) {
         svg_grouping_t svg_grouping = get_svg_grouping(options);
         page_size_t page_size = get_page_size(options);
         
-        std::vector<unsigned char> buf(PA_GetHandleSize(h));
-        memcpy(&buf[0], (const void *)PA_LockHandle(h), PA_GetHandleSize(h));
+        PA_long32 handleSize = PA_GetHandleSize(h);
+        std::vector<unsigned char> buf(handleSize);
+        const void *lockedPtr = PA_LockHandle(h);
+        locked = true;
+        if(handleSize > 0)
+        {
+            memcpy(buf.data(), lockedPtr, handleSize);
+        }
         
         potrace_bitmap_t *bmp = NULL;
         
@@ -203,7 +213,7 @@ void Potrace(PA_PluginParameters params) {
                     {
                         int _fillcolor = parse_color((char *)fillcolor.c_str());
                         info.fillcolor = _fillcolor != -1 ? _fillcolor : info.fillcolor;
-                        ob_set_i(options, L"fillcolor", info.fillcolor);
+                        ob_set_i(returnValue, L"fillcolor", info.fillcolor);
                     }
                     
                     CUTF8String color;
@@ -212,7 +222,7 @@ void Potrace(PA_PluginParameters params) {
                     {
                         int _color = parse_color((char *)color.c_str());
                         info.color = _color != -1 ? _color : info.color;
-                        ob_set_i(options, L"color", info.color);
+                        ob_set_i(returnValue, L"color", info.color);
                     }
                     
                     CUTF8String width, height, scale, resolution, bottommargin,
@@ -468,6 +478,20 @@ void Potrace(PA_PluginParameters params) {
         }
         
         PA_UnlockHandle(h);
+        locked = false;
+    }
+    }
+    catch(...)
+    {
+        // make sure a thrown exception (e.g. std::bad_alloc on a very large
+        // blob, or anything surfacing from potrace/libpotrace) can't leave
+        // the handle locked or skip the mandatory PA_ReturnObject call below
+        // (this command declares a return type in manifest.json, so skipping
+        // it would hang the host waiting for a response that never comes)
+        if(locked)
+        {
+            PA_UnlockHandle(h);
+        }
     }
     
     PA_ReturnObject(params, returnValue);
@@ -480,10 +504,20 @@ void Mkbitmap(PA_PluginParameters params) {
     PA_Handle h = PA_GetBlobHandleParameter( params, 1 );
     PA_ObjectRef options = PA_GetObjectParameter( params, 2 );
     
+    bool locked = false;
+    
+    try
+    {
     if(h)
     {
-        std::vector<unsigned char> buf(PA_GetHandleSize(h));
-        memcpy(&buf[0], (const void *)PA_LockHandle(h), PA_GetHandleSize(h));
+        PA_long32 handleSize = PA_GetHandleSize(h);
+        std::vector<unsigned char> buf(handleSize);
+        const void *lockedPtr = PA_LockHandle(h);
+        locked = true;
+        if(handleSize > 0)
+        {
+            memcpy(buf.data(), lockedPtr, handleSize);
+        }
         
         greymap_t *gm = NULL;
 
@@ -664,9 +698,21 @@ void Mkbitmap(PA_PluginParameters params) {
         
     mkbitmap_abort:
         PA_UnlockHandle(h);
+        locked = false;
+    }
+    }
+    catch(...)
+    {
+        // same rationale as Potrace(): this command declares a return type
+        // (":O" in manifest.json), so an uncaught exception here must not
+        // skip PA_ReturnBlob below (host hang) or leave the handle locked
+        if(locked)
+        {
+            PA_UnlockHandle(h);
+        }
     }
     
-    PA_ReturnBlob(params, (void *)&buf_i[0], (PA_long32)buf_i.size());
+    PA_ReturnBlob(params, (void *)buf_i.data(), (PA_long32)buf_i.size());
 }
 
 #pragma mark -
