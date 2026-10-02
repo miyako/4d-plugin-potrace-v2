@@ -33,6 +33,7 @@
 		D1C0E8A622C5DB2E000ED6F1 /* libpotrace.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1C0E8A522C5DB2E000ED6F1 /* libpotrace.a */; };
 		D1C0E8A922C5DB72000ED6F1 /* backend_pdf.h in Headers */ = {isa = PBXBuildFile; fileRef = D1C0E8A722C5DB72000ED6F1 /* backend_pdf.h */; };
 		D1C0E8AA22C5DB72000ED6F1 /* backend_pdf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D1C0E8A822C5DB72000ED6F1 /* backend_pdf.cpp */; };
+		34EE3862DD911E4258CFFEC2 /* constants.xlf in CopyFiles */ = {isa = PBXBuildFile; fileRef = D14D10DD1A03A8A5008B3411 /* constants.xlf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -43,6 +44,7 @@
 			dstSubfolderSpec = 7;
 			files = (
 				D134D4AC1A030BA0008D14EF /* manifest.json in CopyFiles */,
+				34EE3862DD911E4258CFFEC2 /* constants.xlf in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
