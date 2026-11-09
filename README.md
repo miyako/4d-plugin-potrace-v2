@@ -5,6 +5,105 @@
 
 # 4d-plugin-potrace-v2
 
+## Manual source version and release workflows
+
+Run **Bump version** on an explicitly selected branch with `patch`, `minor`, or
+`major`. It validates source metadata, creates one source-only commit directly
+on the selected dispatch SHA, and pushes only that branch. It does not create
+a tag, dispatch Build, or build anything. A moved/deleted branch, even one
+advanced to the identical resulting commit, is rejected by the mandatory
+executable advertised-SHA pre-push guard. Dispatch again from the desired
+branch state rather than force-pushing.
+
+Run **Build** separately using the Actions branch selector. It has **zero
+inputs** and no push/tag/PR trigger. Every checkout uses the selected
+`github.sha`; the strict source version determines `vX.Y.Z`,
+`Potrace-X.Y.Z.zip`, and `Potrace-X.Y.Z.dmg`. Publication is serialized across
+all branches without cancellation. An existing remote tag or any matching
+release (including drafts) stops the run, both before native work and again
+after all build, signing, notarization, and staple gates.
+
+Windows remains x64 MSBuild with toolset `v143` and Windows SDK `10.0`.
+macOS remains the `Default` target configuration, `arm64 x86_64`, deployment
+target `11.0`, using the existing libraries, bundle resources, Developer ID
+secret names, notary profile and ZIP/DMG/staple policy. No native project or
+dependency modernization is part of this migration.
+
+The native safety corrections address proven gaps in the original workflow:
+whole-bundle cleanup deleted committed QuickLook/resources, recursive
+first-match searches could select stale Windows binaries, the timestamp
+"check" only listed a file, and `notarytool --wait` did not require an
+`Accepted` result. The helpers now invalidate generated products without
+deleting committed resources or the downloaded Windows artifact, require the
+project's exact Windows output and the artifact's exact filename, verify
+AMD64 PE/universal Mach-O architectures and copied source metadata, and require
+both notarizations to be Accepted before stapling. Closed-PATH native stubs
+and PowerShell regressions exercise success, stale/missing output and failure
+paths without running native tools.
+The Release/x64 `.vcxproj` declares
+`test/plugins/Potrace.bundle/contents/windows64/Potrace.4DX`; normalization
+retains the original canonical artifact path
+`test/Plugins/Potrace.bundle/Contents/Windows64/Potrace.4DX`.
+
+### Source authority and migration evidence
+
+The original workflow introduced in `dc60d0d` used marketing-first,
+current-only-fallback semantics; that alone would preserve an independent
+build number. The later `c92c6ca` header explicitly promises to coordinate
+`MARKETING_VERSION`, `CURRENT_PROJECT_VERSION`, and the plist short/build
+versions. Its commit message also promises synchronization. That later
+explicit contract supersedes the older fallback, despite the buggy body
+continuing to update only the marketing key.
+
+The existing authority is **1.0.6**: all six marketing settings and source
+`Info.plist` already agree. This migration repairs only the six stale
+`CURRENT_PROJECT_VERSION = 1.0.4` assignments and the two stale `3.6` display
+strings in source `English.lproj/InfoPlist.strings` to **1.0.6**, without an
+intake increment. Xcode's actual `INFOPLIST_FILE` is `Info.plist` in all three
+target configurations; the resources phase copies the source localized
+strings and `constants.xlf`. The source plist has no `CFBundleVersion`, so
+none is introduced. Copyright text and CR-only localized line endings are
+preserved. Committed `test/Plugins` prebuilts, dependencies, 4D data/schema and
+localization counters are not version authority and are not rewritten.
+At migration intake, `v1.0.6` is already published; run Bump before the next
+Build rather than attempting to republish that version.
+
+Version validation rejects drift, duplicate plist/localized keys, unsupported
+serialization and unresolved/cyclic version references before changing any
+file. Supported Xcode version references are retained, as are optional absent
+plist keys, quoting, BOMs, individual line endings and file modes.
+
+Implementation was adapted from the full committed helpers and regression
+suites in:
+
+- `miyako/4d-plugin-native-encoding-detection@c42ca565857f674bde5ea6ed3435c87375eda4a7` (six coordinated configurations, localized tokenizer, fail-closed cleanup).
+- `miyako/4d-plugin-codec@72c67486d8f8ca88c1d72935137502b3d7ac4465` (two source plists; Potrace actually copies only one).
+- `miyako/4d-plugin-common-string-algorithm@2606a68201866ec9fcbb38b51462d79215f504ef` and `miyako/4d-plugin-window-button@3f14facb9aaaaff0e22eeb8e07531163680c3a8a` (independent build-number preservation, not applicable after Potrace's later coordinated promise).
+
+### Publication failure and recovery
+
+Publication uses separate create-only API requests: create the exact tag at
+the selected SHA and verify it remotely; create a **new**, public,
+non-prerelease release with the tag as its name and an empty body (no generated
+notes, preserving the original policy); upload both assets only to that new
+release ID. It never reuses, edits, deletes, clobbers, rolls back or retries
+remote state. Authentication failures, 404s, network errors, malformed replies
+and failures on later paginated release-list pages stop publication.
+
+If publication fails after a write, the tag, release and any already uploaded
+assets remain. Inspect the failed run and remote tag/release/assets manually,
+including the selected SHA and release ID printed by the helper. A rerun
+intentionally refuses that occupied version. A maintainer must explicitly
+resolve partial state outside this workflow, or use Bump to prepare a new
+source version and then dispatch Build. Do not expect automatic cleanup or
+asset replacement.
+
+Local regression checks (no real native/signing/notary/4D execution):
+`actionlint` and
+`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s .github/tests -v`.
+
+## Plugin reference
+
 The Potrace plugin wraps [potrace](http://potrace.sourceforge.net/) and its companion tool `mkbitmap` to convert raster bitmaps into vector outlines. It exposes two commands: `Potrace`, which traces a bitmap and returns a vector image as an `Object`, and `Mkbitmap`, which pre-processes (filters/scales/thresholds) a bitmap and returns the result as a `BLOB` you can feed straight back into `Potrace`. Traced output comes back either as an SVG or a PDF `Picture`, embedded in the returned object.
 
 > **This reference describes the plugin after the source-level fixes applied in this review session** (safe handling of empty/zero-length blobs, no more host hang on a thrown exception, and `fillcolor`/`color` now reported on the *return* object instead of overwriting the caller's `options` parameter). If you're testing against a plugin binary built before this session, rebuild from the fixed source first — the behavior below won't match an older binary on those three points.
