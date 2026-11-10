@@ -5,6 +5,47 @@
 
 # 4d-plugin-potrace-v2
 
+## Native string ownership
+
+The JSON helpers initialize string temporaries without allocating an empty
+value that the SDK's shallow `PA_SetStringVariable` would overwrite. Property
+readers copy the requested content before clearing the owning
+`PA_GetObjectProperty` result, including type mismatches. The compiled but
+currently unused `ob_get_c` transfers a successful collection reference to its
+caller, who must dispose or transfer it; object/collection setter handoffs
+are unchanged.
+
+Run `python3 .github/tests/test_string_ownership.py` on macOS. This compiles the
+actual JSON helper and the complete unchanged bundled SDK with ASan/UBSan,
+substituting only the `Call4D` engine boundary. It checks allocated and null
+empty representations, exact ASCII/BMP/supplementary UTF-16 and UTF-8 content,
+replacement, repeated reads, mismatches and object/collection reference
+handoffs. Explicit string/handle/reference accounting is used because macOS
+does not support LeakSanitizer. To compare immutable source, set
+`POTRACE_SOURCE_ROOT` to a baseline export; the harness itself remains current.
+
+Audit baseline: `4a6c0644e95ce23174adf126e43a5c87ef9e7a30`.
+Both source and prebuilt-bundle manifests declare `Potrace(&O;&J):J` and
+`Mkbitmap(&O;&J):O`; dispatcher selectors 1 and 2 match. Both native projects
+compile the JSON helper: Potrace reaches its UTF-8 setter and text/boolean/
+numeric readers; Mkbitmap reaches boolean/numeric readers. The wide setter
+and collection getter are compiled but have no first-party callers. The
+remaining command, bitmap/greymap, transform/bounds and SVG/PDF backend sources
+have no first-party text-array, callback, pointer, application-path or
+picture-data getter paths, and there is no CPicture wrapper here. Vendored
+Potrace libraries/headers and SDK internals are not rewritten.
+
+The bundled SDK implementation labels itself `rev: v14`, its public header
+`rev: v13`; these are not verified SDK release identities. The implementation
+explicitly requires clearing property results, allocates a string on Unicode
+variable creation, and shallow-assigns string-variable descriptors. Successful
+object/collection factory results are owning handoffs, not ignored variables
+to clear. No text-array insertion exists in first-party code, so these tests
+do not certify array behavior or resize-allocation failures. Engine-side
+copy/refcount behavior is modeled, not a real 4D host; Windows conversion and
+actual 4D execution remain unverified. No release, signing, packaging or
+prebuilt-binary updates are part of this fix.
+
 ## Manual source version and release workflows
 
 Run **Bump version** on an explicitly selected branch with `patch`, `minor`, or
