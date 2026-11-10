@@ -45,7 +45,7 @@ void ob_set_s(PA_ObjectRef obj, const wchar_t *_key, const char *_value) {
     {
         if(_value)
         {
-            PA_Variable v = PA_CreateVariable(eVK_Unistring);
+            PA_Variable v = PA_CreateVariable(eVK_Undefined);
             CUTF16String ukey;
             
             json_wconv(_key, &ukey);
@@ -93,7 +93,7 @@ void ob_set_a(PA_ObjectRef obj, const wchar_t *_key, const wchar_t *_value) {
     {
         if(_value)
         {
-            PA_Variable v = PA_CreateVariable(eVK_Unistring);
+            PA_Variable v = PA_CreateVariable(eVK_Undefined);
             CUTF16String ukey;
             CUTF16String uvalue;
             json_wconv(_key, &ukey);
@@ -271,6 +271,7 @@ bool ob_get_a(PA_ObjectRef obj, const wchar_t *_key, CUTF8String *value) {
                 }
 #endif
             }
+            PA_ClearVariable(&v);
         }
         
         PA_DisposeUnistring(&key);
@@ -296,6 +297,7 @@ bool ob_get_b(PA_ObjectRef obj, const wchar_t *_key) {
             {
                 value = PA_GetBooleanVariable(v);
             }
+            PA_ClearVariable(&v);
         }
         
         PA_DisposeUnistring(&key);
@@ -321,6 +323,7 @@ double ob_get_n(PA_ObjectRef obj, const wchar_t *_key) {
             {
                 value = PA_GetRealVariable(v);
             }
+            PA_ClearVariable(&v);
         }
         
         PA_DisposeUnistring(&key);
@@ -344,7 +347,10 @@ PA_CollectionRef ob_get_c(PA_ObjectRef obj, const wchar_t *_key) {
             PA_Variable v = PA_GetObjectProperty(obj, &key);
             if(PA_GetVariableKind(v) == eVK_Collection)
             {
+                // Transfer the returned variable's owning reference to the caller.
                 value = PA_GetCollectionVariable(v);
+            }else{
+                PA_ClearVariable(&v);
             }
         }
         

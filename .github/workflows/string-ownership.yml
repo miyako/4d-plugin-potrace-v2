@@ -1,0 +1,29 @@
+name: String ownership
+
+on:
+  pull_request:
+    paths:
+      - 'support/4DPlugin-JSON.*'
+      - '4D Plugin API/**'
+      - '.github/tests/string_ownership.cpp'
+      - '.github/tests/test_string_ownership.py'
+      - '.github/workflows/string-ownership.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'support/4DPlugin-JSON.*'
+      - '4D Plugin API/**'
+      - '.github/tests/string_ownership.cpp'
+      - '.github/tests/test_string_ownership.py'
+      - '.github/workflows/string-ownership.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ownership:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Actual-source SDK ownership regression (unsigned, no packaging)
+        run: python3 .github/tests/test_string_ownership.py
